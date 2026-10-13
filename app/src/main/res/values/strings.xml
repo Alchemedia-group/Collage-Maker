@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Photo Collage</string>
+
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="untitled_collage">Untitled collage</string>
+
+    <string name="home_new_collage">New collage</string>
+    <string name="home_empty_title">No collages yet</string>
+    <string name="home_empty_body">Tap New collage to pick some photos and start.</string>
+    <string name="home_delete_title">Delete this collage?</string>
+    <string name="home_delete_body">The collage and its imported photos will be removed from this device. Your original photos are not touched.</string>
+
+    <string name="new_title">New collage</string>
+    <string name="new_choose_photos">Choose photos</string>
+    <string name="new_add_more">Change selection</string>
+    <string name="new_no_photos">Pick the photos you want in your collage.</string>
+    <string name="new_selected_count">%1$d photos selected</string>
+    <string name="new_layout">Layout</string>
+    <string name="new_create">Create collage</string>
+    <string name="new_import_failed">Couldn\'t import those photos. Please try again.</string>
+
+    <string name="editor_aspect">Shape</string>
+    <string name="editor_layout">Layout</string>
+    <string name="editor_missing">This collage could not be found.</string>
+    <string name="cd_layout_option">Layout with %1$d cells</string>
+    <string name="cd_collage_preview">Collage preview</string>
+</resources>
