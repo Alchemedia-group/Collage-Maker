@@ -4,23 +4,39 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.alchemedia.collage.ui.AppNavigation
+import com.alchemedia.collage.ui.AppRoot
+import com.alchemedia.collage.ui.AppViewModel
+import com.alchemedia.collage.ui.components.LocalApp
 import com.alchemedia.collage.ui.theme.CollageTheme
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: AppViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideNavigationBar()
-        val repository = (application as CollageApp).repository
+        val app = application as CollageApp
         setContent {
-            CollageTheme {
-                AppNavigation(repository)
+            CompositionLocalProvider(LocalApp provides app) {
+                CollageTheme { AppRoot(viewModel) }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (application as CollageApp).billing.connect()
+    }
+
+    override fun onStop() {
+        viewModel.editor?.flush()
+        super.onStop()
     }
 
     // The system brings the bars back after the photo picker or a dialog closes, so hide them
