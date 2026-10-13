@@ -1008,7 +1008,23 @@
     .forEach(([t, id, name, kw]) => add(`w-${id}`, name, 'letters', wordCells(t), { ar: wordAr([...t].length), kw }));
   const customLayouts = [];
   const MY_KEY = 'pc-my-layouts';
-  const myLayouts = (() => { try { const v = JSON.parse(localStorage.getItem(MY_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } })();
+  const finite = (v) => typeof v === 'number' && Number.isFinite(v);
+  const VALID_AR = ['1:1', '4:5', '3:2', '2:3', '16:9', '9:16'];
+  // anything read back from storage is checked, so one bad record can never break the app
+  function cleanLayout(l) {
+    if (!l || typeof l.id !== 'string' || !Array.isArray(l.cells) || !l.cells.length || l.cells.length > 40) return null;
+    const cells = [];
+    for (const c of l.cells) {
+      if (!c || !finite(c.x) || !finite(c.y) || !finite(c.w) || !finite(c.h) || c.w <= 0 || c.h <= 0) return null;
+      const o = { x: Math.min(1, Math.max(0, c.x)), y: Math.min(1, Math.max(0, c.y)), w: Math.min(1, c.w), h: Math.min(1, c.h) };
+      if (typeof c.shape === 'string' && SHAPES[c.shape]) o.shape = c.shape;
+      if (finite(c.sc)) o.sc = c.sc; if (finite(c.rot)) o.rot = c.rot; if (c.fill === true) o.fill = true;
+      if (typeof c.text === 'string' && c.text) o.text = c.text.slice(0, 2);
+      cells.push(o);
+    }
+    return { id: l.id, name: typeof l.name === 'string' && l.name ? l.name.slice(0, 40) : 'My layout', cat: 'mine', mine: true, kw: typeof l.kw === 'string' ? l.kw : '', ar: VALID_AR.includes(l.ar) ? l.ar : '1:1', cells };
+  }
+  const myLayouts = (() => { try { const v = JSON.parse(localStorage.getItem(MY_KEY) || '[]'); return Array.isArray(v) ? v.map(cleanLayout).filter(Boolean) : []; } catch { return []; } })();
   const persistMine = () => { try { localStorage.setItem(MY_KEY, JSON.stringify(myLayouts)); } catch { /* storage blocked */ } };
   const draftLayout = { id: '__draft', name: 'Draft', cat: 'mine', cells: [], kw: '' };
 
@@ -1290,6 +1306,13 @@
   let uploadCount = 0;
 
   const emptyCell = () => ({ photoId: null, zoom: 1, panX: 0, panY: 0 });
+  // brings any project (loaded, duplicated, or whose layout was edited or deleted) back to a consistent shape
+  function normalizeProject(p) {
+    const base = { aspect: '1:1', background: '#ffffff', gap: 2, margin: 2, corner: 0, filter: 'none', filterAmt: 1, texture: 'none', textureAmt: 1, name: '', ...p };
+    base.photos = Array.isArray(p.photos) ? p.photos : []; base.items = Array.isArray(p.items) ? p.items.filter(Boolean) : []; base.cells = Array.isArray(p.cells) ? p.cells.map((c) => c || emptyCell()) : [];
+    if (!VALID_AR.includes(base.aspect)) base.aspect = '1:1';
+    return withLayout(base, layoutById(base.layoutId).id);
+  }
   function withLayout(p, layoutId) {
     const layout = layoutById(layoutId);
     const cells = Array.from({ length: layout.cells.length }, (_, i) => p.cells[i] || emptyCell());
@@ -1699,7 +1722,7 @@
     el.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button === 0) down = { x: e.clientX, left: el.scrollLeft, moved: false }; });
     el.addEventListener('pointermove', (e) => {
       if (!down) return; const dx = e.clientX - down.x;
-      if (!down.moved && Math.abs(dx) > 5) { down.moved = true; el.setPointerCapture(e.pointerId); el.classList.add('dragging'); }
+      if (!down.moved && Math.abs(dx) > 5) { down.moved = true; try { el.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ } el.classList.add('dragging'); }
       if (down.moved) el.scrollLeft = down.left - dx;
     });
     const end = () => { if (down && down.moved) { el._dragged = true; setTimeout(() => { el._dragged = false; }, 0); } el.classList.remove('dragging'); down = null; };
@@ -1914,7 +1937,11 @@
   new ResizeObserver(fitCanvas).observe($('cvWrap'));
 
   function openEditor() {
-    const p = current(); if (!p) { show('home'); return; }
+    let p = current(); if (!p) { show('home'); return; }
+    const lay = layoutById(p.layoutId);
+    if (lay.id !== p.layoutId || p.cells.length !== lay.cells.length || !Array.isArray(p.items)) {
+      const i = state.projects.findIndex((q) => q.id === p.id); state.projects[i] = { ...normalizeProject(p), updated: p.updated }; p = state.projects[i];
+    }
     state.selected = -1; state.selItem = null; state.swapping = false; state.tab = 'layout'; state.panelOpen = true;
     $('sheetScrim').hidden = true;
     if (!edPicker) edPicker = mountPicker($('edPicker'), { target: 'editor', getSel: () => current()?.layoutId, getCount: () => current()?.photos.length || 0, pick: editorPickLayout });
@@ -2205,7 +2232,7 @@
     const p = current(); if (!p) return -1;
     const { x, y } = canvasXY({ clientX: cx, clientY: cy });
     const rects = cellRects(p, cv.width, cv.height);
-    for (let i = 0; i < rects.length; i++) { const r = rects[i]; if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return i; }
+    for (let i = 0; i < rects.length; i++) { const r = rects[i]; if (!p.cells[i]) continue; if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return i; }
     return -1;
   }
   function selectCell(i) {
@@ -2218,7 +2245,7 @@
     const p = current(); if (!p) return;
     cv.focus({ preventScroll: true });
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    cv.setPointerCapture(e.pointerId);
+    try { cv.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     const W = cv.width, H = cv.height, dpr = window.devicePixelRatio || 1, pt = canvasXY(e);
 
     // two fingers on a selected item: scale and rotate it
@@ -2291,7 +2318,7 @@
       const sel = selItemObj(); let cur = 'default';
       if (sel && handleAt(sel, pt.x, pt.y, W, H, window.devicePixelRatio || 1)) cur = 'pointer';
       else if (hitItem(p, pt.x, pt.y, W, H)) cur = 'move';
-      else { const i = cellAt(e.clientX, e.clientY); if (i >= 0 && p.cells[i].photoId != null) cur = 'grab'; }
+      else { const i = cellAt(e.clientX, e.clientY); if (i >= 0 && p.cells[i]?.photoId != null) cur = 'grab'; }
       cv.style.cursor = cur;
     }
   });
@@ -2306,7 +2333,7 @@
     const pt = canvasXY(e), hit = hitItem(p, pt.x, pt.y, cv.width, cv.height);
     if (hit) { e.preventDefault(); if (state.selItem !== hit.id) selectItem(hit.id); itemFn(hit.id, (x) => { x.size = clamp(x.size * Math.exp(-e.deltaY * .0015), .02, .7); return x; }); syncEditor(); return; }
     const i = cellAt(e.clientX, e.clientY);
-    if (i < 0 || p.cells[i].photoId == null) return;
+    if (i < 0 || p.cells[i]?.photoId == null) return;
     e.preventDefault();
     cellFn(i, (c) => ({ ...c, zoom: clamp(c.zoom * Math.exp(-e.deltaY * .0015), 1, MAX_ZOOM) }));
     if (state.selected !== i) selectCell(i); else syncEditor();
@@ -2650,7 +2677,7 @@
     return cells;
   }
   function dzDown(e) {
-    dzCv.focus({ preventScroll: true }); dzCv.setPointerCapture(e.pointerId);
+    dzCv.focus({ preventScroll: true }); try { dzCv.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     const p = dzPt(e), hit = dzHit(p);
     if (!hit) { dz.sel = -1; dzSync(); dzDraw(); return; }
     if (hit.cell !== undefined) dz.sel = hit.cell;
@@ -2669,6 +2696,7 @@
   function dzEnd() { if (!dz.drag) return; dz.drag = null; dz.guides = []; dzSync(); dzDraw(); }
 
   function dzSave() {
+    if ($('designer').hidden) return;
     const name = ($('dzName').value || '').trim() || `My layout ${myLayouts.length + (dz.editId ? 0 : 1)}`;
     const cells = dz.cells.map((c) => { const o = { x: +c.x.toFixed(4), y: +c.y.toFixed(4), w: +c.w.toFixed(4), h: +c.h.toFixed(4) }; ['shape', 'sc', 'rot', 'fill', 'text'].forEach((k) => { if (c[k] !== undefined && c[k] !== null && c[k] !== false) o[k] = c[k]; }); return o; });
     const id = dz.editId || 'my-' + Date.now().toString(36);
@@ -2693,7 +2721,8 @@
     const now = Date.now(), specs = [[0, 40 * 60e3, true], [1, 26 * 3600e3, false], [3, 3 * 86400e3, true], [2, 9 * 86400e3, false]];
     return specs.map(([pi, ago, wm], i) => { const p = state.projects[pi], [w, hh] = exportSize(p); return { id: 'seed' + i, time: now - ago, w, h: hh, wm, project: clone(p) }; });
   }
-  (() => { try { const v = JSON.parse(localStorage.getItem(HIST_KEY) || 'null'); if (Array.isArray(v) && v.length) { historyLog = v; return; } } catch { /* ignore */ } historyLog = seedHistory(); })();
+  const cleanEntry = (e) => (e && typeof e.id === 'string' && finite(e.time) && e.project && typeof e.project === 'object' ? { id: e.id, time: e.time, w: finite(e.w) ? e.w : 1080, h: finite(e.h) ? e.h : 1080, wm: !!e.wm, project: normalizeProject(e.project) } : null);
+  (() => { try { const v = JSON.parse(localStorage.getItem(HIST_KEY) || 'null'); if (Array.isArray(v)) { const ok = v.map(cleanEntry).filter(Boolean); if (ok.length || v.length === 0) { historyLog = ok.length ? ok : seedHistory(); return; } } } catch { /* ignore */ } historyLog = seedHistory(); })();
   const persistHistory = () => { try { localStorage.setItem(HIST_KEY, JSON.stringify(historyLog.slice(0, 40))); } catch { /* storage blocked */ } };
   function recordHistory(p, wm) { const [w, hh] = exportSize(p); historyLog.unshift({ id: 'h' + Date.now().toString(36), time: Date.now(), w, h: hh, wm, project: clone(p) }); historyLog = historyLog.slice(0, 40); persistHistory(); }
   function dayLabel(t) { const d = new Date(t), n = new Date(), day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(), diff = Math.round((day(n) - day(d)) / 86400000); return diff <= 0 ? 'Today' : diff === 1 ? 'Yesterday' : diff < 7 ? 'This week' : 'Earlier'; }
@@ -2707,7 +2736,7 @@
     historyLog.forEach((en) => {
       const lab = dayLabel(en.time); if (lab !== last) { last = lab; list.append(h('div', { class: 'bsec' }, h('h4', { text: lab }))); }
       const cvs = h('canvas', { width: 160, height: Math.max(40, Math.round(160 / ratioOf(en.project.aspect))) });
-      try { drawCollage(cvs.getContext('2d'), en.project, cvs.width, cvs.height); } catch { /* snapshot refers to a photo that is gone */ }
+      try { drawCollage(cvs.getContext('2d'), normalizeProject(en.project), cvs.width, cvs.height); } catch { /* snapshot refers to a photo that is gone */ }
       const row = h('button', { type: 'button', class: 'hrow', onclick: () => openHistoryItem(en.id) }, h('div', { class: 'hthumb' }, cvs), h('div', { class: 'hinfo' }, h('b', { text: en.project.name || 'Untitled collage' }), h('span', { text: `${lab === 'Today' || lab === 'Yesterday' ? fmtTime(en.time) : fmtDate(en.time)} · ${en.w} × ${en.h} · ${layoutById(en.project.layoutId).name}` })), h('span', { class: 'hbadge' + (en.wm ? '' : ' pro'), text: en.wm ? 'WATERMARK' : 'PRO' }));
       list.append(h('div', { class: 'hrowwrap' }, row, h('button', { type: 'button', class: 'hdel', 'aria-label': `Delete ${en.project.name || 'Untitled collage'} from History`, title: 'Delete', html: '<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>', onclick: () => deleteHistoryEntry(en.id) })));
     });
@@ -2715,7 +2744,7 @@
   function openHistoryItem(id) {
     histCur = historyLog.find((e) => e.id === id); if (!histCur) return;
     const cv = $('histCv'), r = ratioOf(histCur.project.aspect); cv.width = r >= 1 ? 540 : Math.round(540 * r); cv.height = r >= 1 ? Math.round(540 / r) : 540;
-    try { drawCollage(cv.getContext('2d'), histCur.project, cv.width, cv.height, { watermark: histCur.wm }); } catch { /* missing photo */ }
+    try { drawCollage(cv.getContext('2d'), normalizeProject(histCur.project), cv.width, cv.height, { watermark: histCur.wm }); } catch { /* missing photo */ }
     $('histTitle').textContent = histCur.project.name || 'Untitled collage';
     $('histMeta').textContent = `Saved ${fmtDate(histCur.time)} at ${fmtTime(histCur.time)} · ${histCur.w} × ${histCur.h}${histCur.wm ? ' · with watermark' : ' · no watermark'}`;
     $('histScrim').hidden = false;
@@ -2724,7 +2753,7 @@
   $('histClose').addEventListener('click', () => { $('histScrim').hidden = true; });
   $('histScrim').addEventListener('pointerdown', (e) => { if (e.target === $('histScrim')) $('histScrim').hidden = true; });
   $('histEdit').addEventListener('click', () => {
-    if (!histCur) return; const p = { ...clone(histCur.project), id: 'p' + nextId++, updated: Date.now() };
+    if (!histCur) return; const p = { ...normalizeProject(clone(histCur.project)), id: 'p' + nextId++, updated: Date.now() };
     state.projects.unshift(p); state.currentId = p.id; $('history').hidden = true; show('editor'); toast('Opened a copy. The saved version stays in History.');
   });
   function deleteHistoryEntry(id) {
@@ -2755,7 +2784,7 @@
   $('cardScrim').addEventListener('pointerdown', (e) => { if (e.target === $('cardScrim')) $('cardScrim').hidden = true; });
   $('cardOpen').addEventListener('click', () => { if (!cardCur) return; $('cardScrim').hidden = true; state.currentId = cardCur.id; show('editor'); });
   $('cardDup').addEventListener('click', () => {
-    if (!cardCur) return; const copy = { ...clone(cardCur), id: 'p' + nextId++, name: (cardCur.name || 'Untitled collage') + ' copy', updated: Date.now() };
+    if (!cardCur) return; const copy = { ...normalizeProject(clone(cardCur)), id: 'p' + nextId++, name: (cardCur.name || 'Untitled collage') + ' copy', updated: Date.now() };
     state.projects.unshift(copy); $('cardScrim').hidden = true; renderHome(); toast('Duplicated.');
   });
   $('cardDelete').addEventListener('click', () => {
@@ -2775,6 +2804,14 @@
     setPlan(true); $('payScrim').hidden = true;
     if (!$('sheetScrim').hidden) { state.exportPro = true; renderExport(); }
     toast('Pro is on for this demo. No payment was taken.');
+  });
+
+
+  /* Escape closes the top-most sheet or screen */
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const order = [['payScrim', () => { $('payScrim').hidden = true; }], ['cardScrim', () => { $('cardScrim').hidden = true; }], ['histScrim', () => { $('histScrim').hidden = true; }], ['sheetScrim', () => { $('sheetScrim').hidden = true; }], ['browse', () => { $('browse').hidden = true; }], ['designer', closeDesigner], ['history', () => { $('history').hidden = true; }]];
+    for (const [id, close] of order) { if (!$(id).hidden) { e.preventDefault(); close(); return; } }
   });
 
   document.querySelectorAll('.quick, #edAspects, #edFilters, #replaceRow, #fontRow, #fontCats, #presetRow, #tplRow, #subTabs, #styleTabs, #emojiCats, #emojiGrid, #fontCats, #colorTargets, #styleTargets, #adjTargets, #kTargets, #bCount, #bCats, #dzAdj').forEach((el) => enableHScroll(el, el.id === 'fontRow' || el.id === 'tplRow' || el.classList.contains('quick')));
