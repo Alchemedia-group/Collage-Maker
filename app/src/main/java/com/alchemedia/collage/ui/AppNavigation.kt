@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui
+package com.alchemedia.collage.ui
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -8,13 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.alchemedia.collagemaker.data.ProjectRepository
-import com.alchemedia.collagemaker.ui.editor.EditorScreen
-import com.alchemedia.collagemaker.ui.editor.EditorViewModel
-import com.alchemedia.collagemaker.ui.home.HomeScreen
-import com.alchemedia.collagemaker.ui.home.HomeViewModel
-import com.alchemedia.collagemaker.ui.picker.NewCollageScreen
-import com.alchemedia.collagemaker.ui.picker.NewCollageViewModel
+import com.alchemedia.collage.data.ProjectRepository
+import com.alchemedia.collage.ui.editor.EditorScreen
+import com.alchemedia.collage.ui.editor.EditorViewModel
+import com.alchemedia.collage.ui.home.HomeScreen
+import com.alchemedia.collage.ui.home.HomeViewModel
+import com.alchemedia.collage.ui.picker.NewCollageScreen
+import com.alchemedia.collage.ui.picker.NewCollageViewModel
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.model
+package com.alchemedia.collage.model
 
 import kotlin.math.max
 import kotlin.math.min

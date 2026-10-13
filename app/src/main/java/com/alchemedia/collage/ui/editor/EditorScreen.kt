@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.editor
+package com.alchemedia.collage.ui.editor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,8 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.alchemedia.collagemaker.R
-import com.alchemedia.collagemaker.model.AspectPreset
+import com.alchemedia.collage.R
+import com.alchemedia.collage.model.AspectPreset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

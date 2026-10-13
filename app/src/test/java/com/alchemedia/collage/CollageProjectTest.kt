@@ -1,10 +1,10 @@
-package com.alchemedia.collagemaker
+package com.alchemedia.collage
 
-import com.alchemedia.collagemaker.data.ProjectJson
-import com.alchemedia.collagemaker.model.AspectPreset
-import com.alchemedia.collagemaker.model.CellContent
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.model.PhotoRef
+import com.alchemedia.collage.data.ProjectJson
+import com.alchemedia.collage.model.AspectPreset
+import com.alchemedia.collage.model.CellContent
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.model.PhotoRef
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -1,11 +1,11 @@
-package com.alchemedia.collagemaker.ui.editor
+package com.alchemedia.collage.ui.editor
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alchemedia.collagemaker.data.ProjectRepository
-import com.alchemedia.collagemaker.model.AspectPreset
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.model.PhotoRef
+import com.alchemedia.collage.data.ProjectRepository
+import com.alchemedia.collage.model.AspectPreset
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.model.PhotoRef
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,13 +1,13 @@
-package com.alchemedia.collagemaker.data
+package com.alchemedia.collage.data
 
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.exifinterface.media.ExifInterface
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.model.GridLayouts
-import com.alchemedia.collagemaker.model.PhotoRef
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.model.GridLayouts
+import com.alchemedia.collage.model.PhotoRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

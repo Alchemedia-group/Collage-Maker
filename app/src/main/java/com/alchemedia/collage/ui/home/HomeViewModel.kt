@@ -1,10 +1,10 @@
-package com.alchemedia.collagemaker.ui.home
+package com.alchemedia.collage.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alchemedia.collagemaker.data.ProjectRepository
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.model.PhotoRef
+import com.alchemedia.collage.data.ProjectRepository
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.model.PhotoRef
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File

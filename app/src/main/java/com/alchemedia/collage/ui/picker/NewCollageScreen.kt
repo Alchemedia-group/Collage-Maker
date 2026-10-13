@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.picker
+package com.alchemedia.collage.ui.picker
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -42,8 +42,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.alchemedia.collagemaker.R
-import com.alchemedia.collagemaker.ui.editor.LayoutPicker
+import com.alchemedia.collage.R
+import com.alchemedia.collage.ui.editor.LayoutPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

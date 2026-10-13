@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.editor
+package com.alchemedia.collage.ui.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,10 +19,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.alchemedia.collagemaker.R
-import com.alchemedia.collagemaker.model.CollageGeometry
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.model.PhotoRef
+import com.alchemedia.collage.R
+import com.alchemedia.collage.model.CollageGeometry
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.model.PhotoRef
 import java.io.File
 
 /**

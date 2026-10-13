@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.home
+package com.alchemedia.collage.ui.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -35,9 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.alchemedia.collagemaker.R
-import com.alchemedia.collagemaker.model.CollageProject
-import com.alchemedia.collagemaker.ui.editor.CollagePreview
+import com.alchemedia.collage.R
+import com.alchemedia.collage.model.CollageProject
+import com.alchemedia.collage.ui.editor.CollagePreview
 import java.text.DateFormat
 import java.util.Date
 
@@ -114,7 +114,7 @@ fun HomeScreen(
 @Composable
 private fun ProjectCard(
     project: CollageProject,
-    photoFile: (com.alchemedia.collagemaker.model.PhotoRef) -> java.io.File,
+    photoFile: (com.alchemedia.collage.model.PhotoRef) -> java.io.File,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {

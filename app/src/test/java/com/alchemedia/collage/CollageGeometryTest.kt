@@ -1,8 +1,8 @@
-package com.alchemedia.collagemaker
+package com.alchemedia.collage
 
-import com.alchemedia.collagemaker.model.CellRect
-import com.alchemedia.collagemaker.model.CollageGeometry
-import com.alchemedia.collagemaker.model.GridLayouts
+import com.alchemedia.collage.model.CellRect
+import com.alchemedia.collage.model.CollageGeometry
+import com.alchemedia.collage.model.GridLayouts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

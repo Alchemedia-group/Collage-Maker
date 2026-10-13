@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.alchemedia.collagemaker"
+    namespace = "com.alchemedia.collage"
     compileSdk {
         version = release(37) {
             minorApiLevel = 2
@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.alchemedia.collagemaker"
+        applicationId = "com.alchemedia.collage"
         minSdk = 26
         targetSdk = 37
         versionCode = 1

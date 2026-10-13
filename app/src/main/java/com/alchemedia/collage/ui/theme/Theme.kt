@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.theme
+package com.alchemedia.collage.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

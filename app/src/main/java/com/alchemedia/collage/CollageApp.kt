@@ -1,7 +1,7 @@
-package com.alchemedia.collagemaker
+package com.alchemedia.collage
 
 import android.app.Application
-import com.alchemedia.collagemaker.data.ProjectRepository
+import com.alchemedia.collage.data.ProjectRepository
 
 class CollageApp : Application() {
     val repository: ProjectRepository by lazy { ProjectRepository(this) }

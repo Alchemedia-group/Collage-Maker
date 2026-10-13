@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.model
+package com.alchemedia.collage.model
 
 /** A rectangle in the unit square. Layouts are stretched to whatever aspect ratio the canvas has. */
 data class UnitRect(val x: Float, val y: Float, val w: Float, val h: Float)

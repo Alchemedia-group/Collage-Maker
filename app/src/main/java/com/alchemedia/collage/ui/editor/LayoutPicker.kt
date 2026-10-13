@@ -1,4 +1,4 @@
-package com.alchemedia.collagemaker.ui.editor
+package com.alchemedia.collage.ui.editor
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
@@ -22,9 +22,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.alchemedia.collagemaker.R
-import com.alchemedia.collagemaker.model.GridLayout
-import com.alchemedia.collagemaker.model.GridLayouts
+import com.alchemedia.collage.R
+import com.alchemedia.collage.model.GridLayout
+import com.alchemedia.collage.model.GridLayouts
 
 @Composable
 fun LayoutPicker(

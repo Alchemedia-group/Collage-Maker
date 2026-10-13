@@ -1,10 +1,10 @@
-package com.alchemedia.collagemaker.ui.picker
+package com.alchemedia.collage.ui.picker
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alchemedia.collagemaker.data.ProjectRepository
-import com.alchemedia.collagemaker.model.GridLayouts
+import com.alchemedia.collage.data.ProjectRepository
+import com.alchemedia.collage.model.GridLayouts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

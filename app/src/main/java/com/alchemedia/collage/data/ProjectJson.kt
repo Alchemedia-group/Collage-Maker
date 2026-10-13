@@ -1,6 +1,6 @@
-package com.alchemedia.collagemaker.data
+package com.alchemedia.collage.data
 
-import com.alchemedia.collagemaker.model.CollageProject
+import com.alchemedia.collage.model.CollageProject
 import kotlinx.serialization.json.Json
 
 /** Shared JSON codec for project files. Unknown keys are ignored so newer files still open. */
