@@ -532,4 +532,120 @@ class AppFlowTest {
         runBlocking { again.load() }
         assertNotNull(again.projects.value.first { it.id == ed.project.id }.backgroundImage)
     }
+
+    // ------------------------------------------------------------------ photo tools, frames, sizes, favourite fonts
+
+    @Test fun aPhotoCanBeTurnedAndMirroredAsItAppearsOnScreen() {
+        val ed = openEditor()
+        ed.selectCell(0)
+        repeat(4) { ed.rotateCell() }
+        assertEquals(0, ed.project.cells[0].turns)
+        ed.rotateCell()
+        assertEquals(1, ed.project.cells[0].turns)
+        // after a quarter turn the photo's own axes are swapped, so a left-right mirror flips its other axis
+        ed.mirrorCell(false)
+        assertTrue(ed.project.cells[0].flipV)
+        assertFalse(ed.project.cells[0].flipH)
+        ed.mirrorCell(true)
+        assertTrue(ed.project.cells[0].flipH)
+    }
+
+    @Test fun straighteningAndLightAreLimited() {
+        val ed = openEditor()
+        ed.selectCell(0)
+        ed.setAngle(80f); assertEquals(45f, ed.project.cells[0].angle, 0f)
+        ed.setAngle(-90f); assertEquals(-45f, ed.project.cells[0].angle, 0f)
+        ed.setLook(LightSlider.Brightness, 50f); assertEquals(.5f, ed.project.cells[0].brightness, .001f)
+        ed.setLook(LightSlider.Contrast, -150f); assertEquals(-1f, ed.project.cells[0].contrast, 0f)
+        ed.setLook(LightSlider.Saturation, 20f); assertEquals(.2f, ed.project.cells[0].saturation, .001f)
+        assertEquals(50f, LightSlider.Brightness.get(ed.project.cells[0]), .01f)
+        assertTrue(ed.project.cells[0].hasLook)
+        ed.resetLook()
+        assertFalse(ed.project.cells[0].hasLook)
+        assertEquals(-45f, ed.project.cells[0].angle, 0f) // light reset leaves the position alone
+    }
+
+    @Test fun resetPutsThePhotoBackButKeepsItsLight() {
+        val ed = openEditor()
+        ed.selectCell(0)
+        ed.updateCell(0) { it.copy(zoom = 3f, panX = .5f, turns = 2, angle = 9f, flipH = true, brightness = .3f) }
+        ed.resetCell()
+        val c = ed.project.cells[0]
+        assertEquals(listOf(1f, 0f, 0, 0f, false), listOf(c.zoom, c.panX, c.turns, c.angle, c.flipH))
+        assertEquals(.3f, c.brightness, 0f)
+    }
+
+    @Test fun draggingATurnedPhotoSlidesAlongItsOwnAxes() {
+        val ed = openEditor(saved("One", "g1x1"))
+        ed.updateCell(0) { it.copy(turns = 1) }
+        ed.onDown(500f, 500f)
+        ed.onMove(500f, 600f) // down the screen is along the turned photo's long side
+        assertTrue("panX=${ed.project.cells[0].panX}", ed.project.cells[0].panX > .1f)
+        ed.onMove(900f, 500f)
+        assertEquals(0f, ed.project.cells[0].panY, 0f) // nothing to slide across the short side
+        ed.onUp()
+    }
+
+    @Test fun framesTakeTheirUsualLookAndWidthIsLimited() {
+        val ed = openEditor()
+        ed.setFrame("polaroid")
+        assertEquals(listOf("polaroid", 0xFFFFFFFF, 4.5f), listOf(ed.project.frame, ed.project.frameColor, ed.project.frameAmount))
+        ed.setFrameAmount(99f)
+        assertEquals(com.alchemedia.collage.render.Frames.MAX_AMOUNT, ed.project.frameAmount, 0f)
+        ed.setFrameColor(0xFFFF4F8B)
+        ed.setFrame("film")
+        assertEquals(0xFF15181F, ed.project.frameColor)
+        ed.setFrame("none")
+        assertEquals("none", ed.project.frame)
+    }
+
+    @Test fun aFramedPhotoPansOnlyWithinTheFrame() {
+        val ed = openEditor(saved("One", "g1x1"))
+        ed.setFrame("polaroid")
+        ed.onDown(500f, 500f)
+        ed.onMove(5000f, 500f)
+        assertEquals(1f, ed.project.cells[0].panX, 0f)
+        ed.onUp()
+        val r = com.alchemedia.collage.model.CollageGeometry.cellRects(ed.project.layout.cells, 1000f, 1000f, ed.project.gapPercent, ed.project.marginPercent)[0]
+        val inner = com.alchemedia.collage.render.CollageRenderer.photoRect(r, ed.project)
+        assertTrue(inner.height() < r.height)
+    }
+
+    @Test fun socialSizesSetTheShapeAndTheExportSize() {
+        val ed = openEditor()
+        ed.setAspect(com.alchemedia.collage.model.SocialPresets.all.first { it.id == "ig-story" }.aspect)
+        assertEquals(AspectPreset.Story916, ed.project.aspect)
+        assertEquals(1152 to 2048, Exporter.sizeFor(ed.project))
+        ed.setAspect(AspectPreset.A4)
+        assertEquals(1448 to 2048, Exporter.sizeFor(ed.project))
+    }
+
+    @Test fun starredFontsAreKeptAndComeBackAfterARestart() {
+        assertTrue(vm.settings.favouriteFonts.value.isEmpty())
+        vm.settings.toggleFavouriteFont("pacifico")
+        vm.settings.toggleFavouriteFont("lobster")
+        assertEquals(setOf("pacifico", "lobster"), vm.settings.favouriteFonts.value)
+        assertEquals(listOf("pacifico", "lobster"), com.alchemedia.collage.model.FontCatalog.favourites(vm.settings.favouriteFonts.value).map { it.id })
+        assertEquals(setOf("pacifico", "lobster"), com.alchemedia.collage.data.SettingsStore(app).favouriteFonts.value)
+        vm.settings.toggleFavouriteFont("pacifico")
+        assertEquals(setOf("lobster"), vm.settings.favouriteFonts.value)
+    }
+
+    @Test fun duplicatingGradientTextKeepsTheGradient() {
+        val ed = openEditor()
+        ed.addItem(com.alchemedia.collage.model.TextGradients.named("Berry").on(CanvasItem.text("Hi")))
+        ed.duplicateItem()
+        assertEquals(2, ed.project.items.size)
+        assertEquals(ed.project.items[0].fill2, ed.project.items[1].fill2)
+        assertNotNull(ed.project.items[1].fill2)
+    }
+
+    @Test fun theGradientSliderAndColourTargetExist() {
+        val ed = openEditor()
+        ed.addItem(CanvasItem.text("Hi"))
+        ed.itemOp { ItemSlider.Gradient.set(it, 120f) }
+        assertEquals(120f, ed.selectedItem!!.gradientAngle, 0f)
+        assertEquals("120°", ItemSlider.Gradient.format(120f))
+        assertTrue(ColorTarget.entries.any { it == ColorTarget.Gradient })
+    }
 }

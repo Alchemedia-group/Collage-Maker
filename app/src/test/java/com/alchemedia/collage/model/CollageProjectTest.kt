@@ -3,6 +3,7 @@ package com.alchemedia.collage.model
 import com.alchemedia.collage.TestAssets
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -89,5 +90,43 @@ class CollageProjectTest {
 
     @Test fun newCollagesStartWithASlimMargin() {
         assertTrue(CollageProject.create("a", 1, photos(2), LayoutCatalog.byId("g2x2")).marginPercent <= 1f)
+    }
+
+    @Test fun projectsSavedBeforePhotoToolsAndFramesStillOpen() {
+        val json = Json { ignoreUnknownKeys = true }
+        val old = """{"id":"x","createdAt":1,"updatedAt":1,"cells":[{"photoId":"a","zoom":1.5,"panX":0.25}],"items":[{"id":"t1","type":"text","text":"Hi"}]}"""
+        val p = json.decodeFromString(CollageProject.serializer(), old)
+        assertEquals("none", p.frame)
+        assertEquals(CellContent("a", 1.5f, .25f), p.cells.single())
+        assertNull(p.items.single().fill2)
+        assertEquals(90f, p.items.single().gradientAngle, 0f)
+    }
+
+    @Test fun everySizeHasItsOwnLabelAndRoundTrips() {
+        assertEquals(AspectPreset.entries.size, AspectPreset.entries.map { it.label }.toSet().size)
+        AspectPreset.entries.forEach { assertEquals(it, AspectPreset.fromLabel(it.label)) }
+    }
+
+    @Test fun socialSizesPointAtRealSizes() {
+        assertEquals(AspectPreset.Story916, SocialPresets.all.first { it.id == "ig-story" }.aspect)
+        assertEquals(AspectPreset.Portrait45, SocialPresets.all.first { it.id == "ig-post" }.aspect)
+        assertEquals(AspectPreset.A4, SocialPresets.all.first { it.id == "print-a4" }.aspect)
+        assertEquals(SocialPresets.all.size, SocialPresets.all.map { it.id }.toSet().size)
+        assertTrue(SocialPresets.namesFor(AspectPreset.Story916).containsAll(listOf("Instagram story", "TikTok")))
+    }
+
+    @Test fun anA4SheetIsTallerThanItIsWide() {
+        assertEquals(210f / 297f, AspectPreset.A4.ratio, .0001f)
+    }
+
+    @Test fun gradientsAndPresets() {
+        val item = TextGradients.named("Ocean").on(CanvasItem.text("x"))
+        assertEquals(TextGradients.named("Ocean").from, item.fill)
+        assertEquals(TextGradients.named("Ocean").to, item.fill2)
+        // a gradient preset sets the fade, and a plain-colour preset applied later puts one colour back
+        val sunset = TextPresets.all.first { it.id == "sunset" }.apply(CanvasItem.text("x"))
+        assertNotNull(sunset.fill2)
+        assertNull(TextPresets.all.first { it.id == "comic" }.apply(sunset).fill2)
+        assertEquals(TextPresets.all.size, TextPresets.all.map { it.id }.toSet().size)
     }
 }

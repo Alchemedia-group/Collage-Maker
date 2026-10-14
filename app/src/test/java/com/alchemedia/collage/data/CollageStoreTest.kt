@@ -65,6 +65,22 @@ class CollageStoreTest {
         assertEquals("Trip", again.projects.value.single().name)
     }
 
+    @Test fun photoToolsFramesAndGradientsSurviveARestart() {
+        val base = project("Tools")
+        val p = base.copy(
+            frame = "film", frameColor = 0xFF123456, frameAmount = 7f,
+            cells = base.cells.mapIndexed { i, c ->
+                if (i == 0) c.copy(turns = 1, angle = -3f, flipH = true, flipV = true, brightness = .2f, contrast = -.4f, saturation = .6f) else c
+            },
+            items = listOf(com.alchemedia.collage.model.CanvasItem.text("Hi").copy(fill2 = 0xFF0000FF, gradientAngle = 30f)),
+        )
+        runBlocking { store.save(p) }
+        val back = reopen().projects.value.first { it.id == p.id }
+        assertEquals(p.cells, back.cells)
+        assertEquals(p.items, back.items)
+        assertEquals(listOf("film", 0xFF123456, 7f), listOf(back.frame, back.frameColor, back.frameAmount))
+    }
+
     @Test fun newestProjectIsFirst() {
         val a = runBlocking { store.save(project("A")) }
         Thread.sleep(5)

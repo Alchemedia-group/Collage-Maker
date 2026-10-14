@@ -42,6 +42,19 @@ object Filters {
 
     fun colorFilter(id: String): ColorMatrixColorFilter? = matrix(id)?.let { ColorMatrixColorFilter(it) }
 
+    /**
+     * The matrix for one photo's own brightness, contrast and saturation sliders (each -1..1), or null when all are
+     * zero. Applied before the collage-wide filter.
+     */
+    fun adjust(brightness: Float, contrast: Float, saturation: Float): ColorMatrix? {
+        if (brightness == 0f && contrast == 0f && saturation == 0f) return null
+        val result = ColorMatrix()
+        if (saturation != 0f) result.postConcat(saturate((1f + saturation).coerceIn(0f, 2f)))
+        if (contrast != 0f) result.postConcat(contrast((1f + contrast * .6f).coerceAtLeast(0f)))
+        if (brightness != 0f) result.postConcat(brightness((1f + brightness * .6f).coerceAtLeast(0f)))
+        return result
+    }
+
     internal fun fromCss(css: String): ColorMatrix? {
         if (css == "none") return null
         val result = ColorMatrix()

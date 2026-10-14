@@ -2,8 +2,11 @@ package com.alchemedia.collage.render
 
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Shader
 import com.alchemedia.collage.model.CanvasItem
 import com.alchemedia.collage.model.StickerKind
 import kotlin.math.abs
@@ -150,10 +153,11 @@ object ItemRenderer {
 
         val sh = item.shadow
         val hasStroke = item.strokeW > 0f
-        fun each(p: Paint, dx: Float = 0f, dy: Float = 0f) = lay.chars.forEach { q ->
+        fun each(p: Paint, dx: Float = 0f, dy: Float = 0f, shaderFor: ((PlacedChar) -> Shader)? = null) = lay.chars.forEach { q ->
             canvas.save()
             canvas.translate(q.x + dx, q.y + dy)
             canvas.rotate(Math.toDegrees(q.rot.toDouble()).toFloat())
+            if (shaderFor != null) p.shader = shaderFor(q)
             canvas.drawText(q.ch, 0f, base, p)
             canvas.restore()
         }
@@ -185,7 +189,9 @@ object ItemRenderer {
                 color = alphaOf(fillColor, op)
                 if (!hasStroke) withShadow(this)
             }
-            each(fp)
+            val end = item.fill2
+            if (end == null) each(fp)
+            else each(fp, shaderFor = { q -> gradientShader(item, lay.box, q, alphaOf(fillColor, op), alphaOf(end, op)) })
         } else if (sh != null && !hasStroke && sh.blur > 0f) {
             // Hollow text with a glow: the shadow of a hairline stroke.
             val gp = Paint(paint).apply {
@@ -195,6 +201,25 @@ object ItemRenderer {
             each(gp)
         }
         canvas.restore()
+    }
+
+    /**
+     * The text's colour fade, laid across the whole text box at the item's gradient angle. Each letter is drawn in its
+     * own turned and shifted space, so the shader is mapped back into the item's space for that letter.
+     */
+    private fun gradientShader(item: CanvasItem, box: RectF, q: PlacedChar, from: Int, to: Int): Shader {
+        val a = Math.toRadians(item.gradientAngle.toDouble())
+        val dx = cos(a).toFloat()
+        val dy = sin(a).toFloat()
+        val half = max(1f, abs(box.width() / 2 * dx) + abs(box.height() / 2 * dy))
+        val cx = box.centerX()
+        val cy = box.centerY()
+        val shader = LinearGradient(cx - dx * half, cy - dy * half, cx + dx * half, cy + dy * half, from, to, Shader.TileMode.CLAMP)
+        shader.setLocalMatrix(Matrix().apply {
+            setTranslate(-q.x, -q.y)
+            postRotate(-Math.toDegrees(q.rot.toDouble()).toFloat())
+        })
+        return shader
     }
 
     private fun drawSticker(canvas: Canvas, item: CanvasItem, w: Float, h: Float) {

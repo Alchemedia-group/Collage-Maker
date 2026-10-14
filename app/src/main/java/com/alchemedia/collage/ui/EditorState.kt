@@ -23,18 +23,33 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 enum class EditorTab(val label: String) { Layout("Layout"), Shape("Shape"), Style("Style"), Photo("Photo"), Text("Text"), Sticker("Stickers") }
-enum class StyleSub(val label: String) { Color("Color"), Texture("Texture"), Spacing("Spacing"), Filter("Filter"), Image("Image") }
+enum class StyleSub(val label: String) { Color("Color"), Texture("Texture"), Spacing("Spacing"), Filter("Filter"), Image("Image"), Frame("Frame") }
+enum class PhotoSub(val label: String) { Photo("Photo"), Rotate("Rotate"), Light("Light") }
+
+/** One of the three light sliders for the selected photo (-100..100 on screen, -1..1 stored). */
+enum class LightSlider(val label: String) {
+    Brightness("Brightness"), Contrast("Contrast"), Saturation("Saturation");
+
+    fun get(c: CellContent): Float = when (this) { Brightness -> c.brightness; Contrast -> c.contrast; Saturation -> c.saturation } * 100f
+    fun set(c: CellContent, v: Float): CellContent {
+        val x = (v / 100f).coerceIn(-1f, 1f)
+        return when (this) { Brightness -> c.copy(brightness = x); Contrast -> c.copy(contrast = x); Saturation -> c.copy(saturation = x) }
+    }
+}
 enum class TextSub(val label: String) { Text("Text"), Font("Font"), Color("Color"), Style("Style"), Adjust("Size") }
 
 /** One number the user can slide for the selected item. */
 enum class ItemSlider(val label: String, val min: Float, val max: Float, val step: Float, val unit: String = "%") {
     Stroke("Outline", 0f, 25f, 1f), Shadow("Shadow", 0f, 100f, 1f), Opacity("Opacity", 20f, 100f, 1f), Size("Size", 3f, 60f, .5f),
-    Spacing("Spacing", -10f, 60f, 1f), Curve("Curve", -100f, 100f, 1f, ""), Rotate("Rotate", -180f, 180f, 1f, "°");
+    Spacing("Spacing", -10f, 60f, 1f), Curve("Curve", -100f, 100f, 1f, ""), Rotate("Rotate", -180f, 180f, 1f, "°"),
+    Gradient("Angle", 0f, 360f, 1f, "°");
 
     fun get(it: CanvasItem): Float = when (this) {
         Stroke -> (it.strokeW * 100).roundToInt().toFloat()
@@ -44,6 +59,7 @@ enum class ItemSlider(val label: String, val min: Float, val max: Float, val ste
         Spacing -> (it.spacing * 100).roundToInt().toFloat()
         Curve -> it.curve.roundToInt().toFloat()
         Rotate -> it.rot.roundToInt().toFloat()
+        Gradient -> it.gradientAngle.roundToInt().toFloat()
     }
 
     fun set(it: CanvasItem, v: Float): CanvasItem = when (this) {
@@ -54,6 +70,7 @@ enum class ItemSlider(val label: String, val min: Float, val max: Float, val ste
         Spacing -> it.copy(spacing = v / 100f)
         Curve -> it.copy(curve = v)
         Rotate -> it.copy(rot = v)
+        Gradient -> it.copy(gradientAngle = v)
     }
 
     fun format(v: Float): String {
@@ -63,7 +80,7 @@ enum class ItemSlider(val label: String, val min: Float, val max: Float, val ste
     }
 }
 
-enum class ColorTarget(val label: String) { Fill("Text"), Stroke("Outline"), Highlight("Highlight") }
+enum class ColorTarget(val label: String) { Fill("Text"), Gradient("Gradient"), Stroke("Outline"), Highlight("Highlight") }
 
 const val MAX_ZOOM = 20f
 private const val MIN_ITEM = .02f
@@ -80,6 +97,8 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
     var selectedItemId by mutableStateOf<String?>(null)
     var swapping by mutableStateOf(false)
     var tab by mutableStateOf(EditorTab.Layout)
+    var photoSub by mutableStateOf(PhotoSub.Photo)
+    var lightSlider by mutableStateOf(LightSlider.Brightness)
     var panelOpen by mutableStateOf(true)
     var styleSub by mutableStateOf(StyleSub.Color)
     var textSub by mutableStateOf(TextSub.Text)
@@ -192,6 +211,14 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
     fun setFilterAmount(v: Float) = update { it.copy(filterAmount = v) }
     fun setTextureAmount(v: Float) = update { it.copy(textureAmount = v) }
 
+    /** Picking a frame also sets its usual colour and width; both can be changed afterwards. */
+    fun setFrame(id: String) {
+        val def = com.alchemedia.collage.render.Frames.byId(id)
+        update { it.copy(frame = def.id, frameColor = def.color, frameAmount = def.amount) }
+    }
+    fun setFrameColor(argb: Long) = update { it.copy(frameColor = argb) }
+    fun setFrameAmount(v: Float) = update { it.copy(frameAmount = v.coerceIn(0f, com.alchemedia.collage.render.Frames.MAX_AMOUNT)) }
+
     fun setTexture(id: String, base: Long?) = update {
         val bg = if (base != null && (it.background and 0xFFFFFFL) == 0xFFFFFFL) base else it.background
         it.copy(texture = id, background = bg, textureAmount = if (it.textureAmount > 0f) it.textureAmount else 1f)
@@ -220,7 +247,16 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
         p.copy(cells = p.cells.mapIndexed { i, c -> if (i == index) fn(c) else c })
     }
 
-    fun resetCell() = updateCell(selectedCell) { it.copy(zoom = 1f, panX = 0f, panY = 0f) }
+    fun resetCell() = updateCell(selectedCell) { it.resetPosition() }
+    fun resetLook() = updateCell(selectedCell) { it.resetLook() }
+    fun setLook(slider: LightSlider, v: Float) = updateCell(selectedCell) { slider.set(it, v) }
+    fun setAngle(v: Float) = updateCell(selectedCell) { it.copy(angle = v.coerceIn(-45f, 45f)) }
+    fun rotateCell() = updateCell(selectedCell) { it.copy(turns = (it.turns + 1) % 4) }
+
+    /** Mirrors the photo as it looks on screen: after a quarter turn the photo's own axes are swapped. */
+    fun mirrorCell(vertical: Boolean) = updateCell(selectedCell) { c ->
+        if (vertical xor (c.turns % 2 != 0)) c.copy(flipV = !c.flipV) else c.copy(flipH = !c.flipH)
+    }
     fun emptyCell() = updateCell(selectedCell) { CellContent() }
     fun setZoom(v: Float) = updateCell(selectedCell) { it.copy(zoom = v.coerceIn(1f, MAX_ZOOM)) }
 
@@ -429,14 +465,18 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
         val photoId = cell.photoId ?: return
         val bmp = photoSource?.bitmap(photoId) ?: return
         val r = cellRects().getOrNull(drag.cell) ?: return
-        val pr = CollageRenderer.photoRect(r)
-        val box = CollageRenderer.photoBox(pr.left, pr.top, pr.width(), pr.height(), cell, bmp.width, bmp.height)
-        val ox = (box.width - pr.width()) / 2
-        val oy = (box.height - pr.height()) / 2
+        val pr = CollageRenderer.photoRect(r, p)
+        val pl = CollageRenderer.photoPlacement(pr.left, pr.top, pr.width(), pr.height(), cell, bmp.width, bmp.height)
+        // The finger moves in screen space; pan runs along the photo's own (turned) axes.
+        val a = Math.toRadians(cell.rotation.toDouble())
+        val dx = x - drag.x
+        val dy = y - drag.y
+        val lx = (dx * cos(a) + dy * sin(a)).toFloat()
+        val ly = (-dx * sin(a) + dy * cos(a)).toFloat()
         updateCell(drag.cell) {
             it.copy(
-                panX = if (ox > .5f) (drag.panX + (x - drag.x) / ox).coerceIn(-1f, 1f) else it.panX,
-                panY = if (oy > .5f) (drag.panY + (y - drag.y) / oy).coerceIn(-1f, 1f) else it.panY,
+                panX = if (pl.slackX > .5f) (drag.panX + lx / pl.slackX).coerceIn(-1f, 1f) else it.panX,
+                panY = if (pl.slackY > .5f) (drag.panY + ly / pl.slackY).coerceIn(-1f, 1f) else it.panY,
             )
         }
     }

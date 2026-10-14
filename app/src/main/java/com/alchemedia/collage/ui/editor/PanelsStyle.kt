@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
@@ -40,20 +42,25 @@ import coil3.compose.AsyncImage
 import com.alchemedia.collage.R
 import com.alchemedia.collage.model.AspectPreset
 import com.alchemedia.collage.model.PhotoRef
+import com.alchemedia.collage.model.SocialPresets
 import com.alchemedia.collage.model.TextColors
 import com.alchemedia.collage.render.Filters
+import com.alchemedia.collage.render.Frames
 import com.alchemedia.collage.render.Textures
 import com.alchemedia.collage.ui.AppViewModel
 import com.alchemedia.collage.ui.BrowseTarget
 import com.alchemedia.collage.ui.EditorState
 import com.alchemedia.collage.ui.EditorTab
+import com.alchemedia.collage.ui.LightSlider
 import com.alchemedia.collage.ui.MAX_ZOOM
+import com.alchemedia.collage.ui.PhotoSub
 import com.alchemedia.collage.ui.StyleSub
 import com.alchemedia.collage.ui.components.BtnStyle
 import com.alchemedia.collage.ui.components.CButton
 import com.alchemedia.collage.ui.components.CIcon
 import com.alchemedia.collage.ui.components.CText
 import com.alchemedia.collage.ui.components.ColorGrid
+import com.alchemedia.collage.ui.components.ColorRow
 import com.alchemedia.collage.ui.components.Icon
 import com.alchemedia.collage.ui.components.LayoutPicker
 import com.alchemedia.collage.ui.components.ScrollRow
@@ -80,23 +87,29 @@ fun LayoutPanel(vm: AppViewModel, ed: EditorState) {
 @Composable
 fun ShapePanel(ed: EditorState) {
     val c = CTheme.colors
-    ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
-        AspectPreset.entries.forEach { a ->
-            val on = ed.project.aspect == a
-            val k = 30f / maxOf(a.width, a.height)
-            Column(
-                Modifier.width(64.dp).pressable({ ed.setAspect(a) }, role = Role.RadioButton, label = "Aspect ${a.label}").semantics { selected = on },
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp),
-            ) {
-                Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                    Box(
-                        Modifier.size((a.width * k).dp, (a.height * k).dp).clip(RoundedCornerShape(5.dp))
-                            .background(if (on) c.accent.copy(alpha = .18f) else Color.Transparent)
-                            .border(2.5.dp, if (on) c.accent else c.muted, RoundedCornerShape(5.dp)),
-                    )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
+            AspectPreset.entries.forEach { a ->
+                val on = ed.project.aspect == a
+                val k = 30f / maxOf(a.width, a.height)
+                Column(
+                    Modifier.width(64.dp).pressable({ ed.setAspect(a) }, role = Role.RadioButton, label = "Aspect ${a.label}").semantics { selected = on },
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier.size((a.width * k).dp, (a.height * k).dp).clip(RoundedCornerShape(5.dp))
+                                .background(if (on) c.accent.copy(alpha = .18f) else Color.Transparent)
+                                .border(2.5.dp, if (on) c.accent else c.muted, RoundedCornerShape(5.dp)),
+                        )
+                    }
+                    CText(a.label, size = 12.sp, weight = 700, color = if (on) c.accent else c.muted)
                 }
-                CText(a.label, size = 12.sp, weight = 700, color = if (on) c.accent else c.muted)
             }
+        }
+        CText("SIZES FOR", Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+        ScrollRow(padding = 14.dp, spacing = 6.dp) {
+            SocialPresets.all.forEach { s -> TabChip(s.name, ed.project.aspect == s.aspect, { ed.setAspect(s.aspect) }) }
         }
     }
 }
@@ -152,6 +165,18 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
                 SliderRow("Margin", p.marginPercent, -10f..12f, { "${it}%" }, ed::setMargin, step = .25f)
                 SliderRow("Corners", p.cornerPercent, 0f..100f, ::percentText, ed::setCorner, step = 1f)
             }
+            StyleSub.Frame -> {
+                ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
+                    Frames.all.forEach { f -> TileWithLabel(f.name, p.frame == f.id, { ed.setFrame(f.id) }) { FrameThumb(f.id) } }
+                }
+                val on = p.frame != Frames.NONE
+                Box(Modifier.alpha(if (on) 1f else .4f)) {
+                    SliderRow("Width", p.frameAmount, 0f..Frames.MAX_AMOUNT, { "${(it * 10).roundToInt() / 10f}%" }, { if (on) ed.setFrameAmount(it) }, step = .5f)
+                }
+                if (on) {
+                    ColorRow(TextColors.palette, p.frameColor, { col -> if (col != null) ed.setFrameColor(col) }, onCustom = { onCustomColor(p.frameColor, ed::setFrameColor) })
+                }
+            }
             StyleSub.Filter -> {
                 ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
                     Filters.all.forEach { f ->
@@ -186,6 +211,26 @@ fun TileWithLabel(label: String, selected: Boolean, onClick: () -> Unit, content
     }
 }
 
+/** A small sample of a frame around a stand-in photo, drawn by the same code that frames the real ones. */
+@Composable
+private fun FrameThumb(id: String) {
+    val c = CTheme.colors
+    val def = Frames.byId(id)
+    androidx.compose.foundation.Canvas(Modifier.size(56.dp)) {
+        drawRect(c.tint)
+        drawIntoCanvas { canvas ->
+            val nc = canvas.nativeCanvas
+            val m = size.width * .16f
+            val r = android.graphics.RectF(m, m, size.width - m, size.height - m)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = android.graphics.LinearGradient(r.left, r.top, r.right, r.bottom, 0xFF6FB1FF.toInt(), 0xFFFF9D5C.toInt(), android.graphics.Shader.TileMode.CLAMP)
+            }
+            // Thumbnails are small, so the frame is drawn thicker than it would be on a real photo.
+            Frames.draw(nc, id, r, size.width * .03f, def.color.toInt(), def.amount * 2.2f, 3) { inner, radius -> nc.drawRoundRect(inner, radius, radius, paint) }
+        }
+    }
+}
+
 @Composable
 private fun TextureThumb(id: String, base: Long?) {
     val image: ImageBitmap? by produceState<ImageBitmap?>(null, id) {
@@ -217,6 +262,22 @@ fun PhotoPanel(vm: AppViewModel, ed: EditorState, onAddPhotos: () -> Unit) {
     }
     val filled = cell.photoId != null
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ScrollRow(padding = 14.dp, spacing = 6.dp) {
+            PhotoSub.entries.forEach { s -> TabChip(s.label, ed.photoSub == s, { ed.photoSub = s }) }
+        }
+        when (ed.photoSub) {
+            PhotoSub.Photo -> PhotoMain(vm, ed, cell, filled, onAddPhotos)
+            PhotoSub.Rotate -> PhotoRotate(ed, cell, filled)
+            PhotoSub.Light -> PhotoLight(ed, cell, filled)
+        }
+    }
+}
+
+@Composable
+private fun PhotoMain(vm: AppViewModel, ed: EditorState, cell: com.alchemedia.collage.model.CellContent, filled: Boolean, onAddPhotos: () -> Unit) {
+    val c = CTheme.colors
+    val p = ed.project
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(Modifier.alpha(if (filled) 1f else .4f)) {
             // Zoom goes up to 20x, so the slider is logarithmic: the same finger movement is the same proportional change.
             val top = kotlin.math.ln(MAX_ZOOM)
@@ -240,6 +301,39 @@ fun PhotoPanel(vm: AppViewModel, ed: EditorState, onAddPhotos: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) { CIcon(Icon.Add, size = 22.dp, tint = c.onTint, strokeWidth = 2.6f) }
             p.photos.forEach { ref -> Mini(vm, p.id, ref, ref.id == cell.photoId) { ed.useExistingPhoto(ref) } }
+        }
+    }
+}
+
+/** Straighten, quarter turns and mirroring. */
+@Composable
+private fun PhotoRotate(ed: EditorState, cell: com.alchemedia.collage.model.CellContent, filled: Boolean) {
+    Column(Modifier.alpha(if (filled) 1f else .4f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SliderRow("Straighten", cell.angle, -45f..45f, { "${it.roundToInt()}°" }, { if (filled) ed.setAngle(it) }, step = 1f)
+        ScrollRow(padding = 14.dp, spacing = 8.dp) {
+            CButton("Rotate", { if (filled) ed.rotateCell() }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Rotate)
+            CButton("Mirror", { if (filled) ed.mirrorCell(false) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Flip)
+            CButton("Flip", { if (filled) ed.mirrorCell(true) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.FlipV)
+            CButton("Reset", { if (filled) ed.resetCell() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasTurn, icon = Icon.Reset)
+        }
+    }
+}
+
+/** Brightness, contrast and saturation for this one photo (the collage-wide filter is separate). */
+@Composable
+private fun PhotoLight(ed: EditorState, cell: com.alchemedia.collage.model.CellContent, filled: Boolean) {
+    Column(Modifier.alpha(if (filled) 1f else .4f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LightSlider.entries.forEach { slider ->
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                CText(slider.label, Modifier.width(86.dp), size = 14.sp, weight = 600, maxLines = 1)
+                com.alchemedia.collage.ui.components.BigSlider(
+                    slider.get(cell), { if (filled) ed.setLook(slider, it) }, -100f..100f, Modifier.weight(1f), step = 1f, label = slider.label,
+                )
+                CText("${slider.get(cell).roundToInt()}", Modifier.width(40.dp), size = 13.sp, weight = 600, align = TextAlign.End)
+            }
+        }
+        Row(Modifier.padding(horizontal = 14.dp)) {
+            CButton("Reset light", { if (filled) ed.resetLook() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasLook, icon = Icon.Reset)
         }
     }
 }

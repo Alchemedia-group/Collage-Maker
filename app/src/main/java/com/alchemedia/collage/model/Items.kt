@@ -33,6 +33,9 @@ data class CanvasItem(
     val text: String = "",
     val font: String = "bric",
     val fill: Long? = 0xFFFFFFFF,
+    /** When set, the text fades from [fill] to this colour along [gradientAngle] (0 = left to right, 90 = top to bottom). */
+    val fill2: Long? = null,
+    val gradientAngle: Float = 90f,
     val strokeColor: Long = 0xFF111827,
     val strokeW: Float = 0f,
     val shadow: ShadowSpec? = null,

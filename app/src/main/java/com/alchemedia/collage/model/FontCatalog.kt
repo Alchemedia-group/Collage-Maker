@@ -75,5 +75,11 @@ object FontCatalog {
 
     fun byId(id: String): FontDef = all.firstOrNull { it.id == id } ?: all.first()
 
+    /** Id of the pseudo-category that lists the user's starred fonts. */
+    const val FAVOURITES = "fav"
+
     fun inCategory(category: String): List<FontDef> = all.filter { category in it.categories }
+
+    /** The starred fonts, in catalogue order. */
+    fun favourites(ids: Set<String>): List<FontDef> = all.filter { it.id in ids }
 }

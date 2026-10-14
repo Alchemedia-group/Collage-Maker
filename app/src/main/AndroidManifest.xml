@@ -4,6 +4,18 @@
     <!-- Only needed to save to Pictures on Android 9 and older; newer versions need no permission. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
+    <!-- Lets the save sheet show which social apps are installed (Android 11+ hides other apps by default). -->
+    <queries>
+        <package android:name="com.instagram.android" />
+        <package android:name="com.zhiliaoapp.musically" />
+        <package android:name="com.whatsapp" />
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.pinterest" />
+        <package android:name="com.twitter.android" />
+        <package android:name="com.snapchat.android" />
+        <package android:name="org.telegram.messenger" />
+    </queries>
+
     <application
         android:name=".CollageApp"
         android:allowBackup="false"

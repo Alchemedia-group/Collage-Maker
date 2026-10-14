@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -58,6 +59,7 @@ import com.alchemedia.collage.model.FontDef
 import com.alchemedia.collage.model.ItemType
 import com.alchemedia.collage.model.StickerKind
 import com.alchemedia.collage.model.TextColors
+import com.alchemedia.collage.model.TextGradients
 import com.alchemedia.collage.model.TextPresets
 import com.alchemedia.collage.model.TextTemplates
 import com.alchemedia.collage.render.Fonts
@@ -86,9 +88,12 @@ import androidx.compose.ui.text.font.Typeface as ComposeTypeface
 private val DARK_TILE = Color(0xFF1F2430)
 
 @Composable
-fun TextPanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
+fun TextPanel(
+    ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit,
+    favouriteFonts: Set<String> = emptySet(), onToggleFavourite: (String) -> Unit = {},
+) {
     val item = ed.selectedItem?.takeIf { it.isText }
-    if (item == null) TextHome(ed) else TextEdit(ed, item, onCustomColor)
+    if (item == null) TextHome(ed) else TextEdit(ed, item, onCustomColor, favouriteFonts, onToggleFavourite)
 }
 
 @Composable
@@ -116,7 +121,7 @@ private fun TextHome(ed: EditorState) {
 }
 
 @Composable
-private fun TextEdit(ed: EditorState, item: CanvasItem, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
+private fun TextEdit(ed: EditorState, item: CanvasItem, onCustomColor: (Long, (Long) -> Unit) -> Unit, favouriteFonts: Set<String>, onToggleFavourite: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (!ed.typing) {
             Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -128,7 +133,7 @@ private fun TextEdit(ed: EditorState, item: CanvasItem, onCustomColor: (Long, (L
         }
         when (ed.textSub) {
             TextSub.Text -> TextBox(ed, item)
-            TextSub.Font -> FontPanel(ed, item)
+            TextSub.Font -> FontPanel(ed, item, favouriteFonts, onToggleFavourite)
             TextSub.Color -> ColorPanel(ed, item, onCustomColor)
             TextSub.Style -> StylePanelText(ed, item)
             TextSub.Adjust -> AdjustPanel(ed, item)
@@ -187,24 +192,39 @@ private fun TextBox(ed: EditorState, item: CanvasItem) {
 private fun fontFamilyOf(def: FontDef, bold: Boolean = false): FontFamily = FontFamily(ComposeTypeface(Fonts.typeface(def, bold)))
 
 @Composable
-private fun FontPanel(ed: EditorState, item: CanvasItem) {
+private fun FontPanel(ed: EditorState, item: CanvasItem, favourites: Set<String>, onToggleFavourite: (String) -> Unit) {
     val c = CTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScrollRow(padding = 14.dp, spacing = 6.dp) {
+            TabChip("Favourites", ed.fontCategory == FontCatalog.FAVOURITES, { ed.fontCategory = FontCatalog.FAVOURITES })
             FontCatalog.categories.forEach { (id, name) -> TabChip(name, ed.fontCategory == id, { ed.fontCategory = id }) }
         }
-        val fonts = remember(ed.fontCategory) { FontCatalog.inCategory(ed.fontCategory) }
+        val fonts = remember(ed.fontCategory, favourites) {
+            if (ed.fontCategory == FontCatalog.FAVOURITES) FontCatalog.favourites(favourites) else FontCatalog.inCategory(ed.fontCategory)
+        }
+        if (fonts.isEmpty()) {
+            CText("Tap the star on a font to keep it here.", Modifier.padding(horizontal = 18.dp, vertical = 8.dp), size = 13.sp, color = c.muted)
+        }
         ScrollRow(padding = 14.dp, spacing = 10.dp, state = rememberScrollState(), tiles = true) {
             fonts.forEach { f ->
                 val on = f.id == item.font
-                Column(
-                    Modifier.width(108.dp).height(50.dp).clip(RoundedCornerShape(12.dp)).background(c.paper)
-                        .border(2.dp, if (on) c.accent else Color.Transparent, RoundedCornerShape(12.dp))
-                        .pressable({ ed.itemOp { it.copy(font = f.id) } }, role = Role.RadioButton, label = f.name).semantics { selected = on },
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-                ) {
-                    Text("Collage", fontFamily = fontFamilyOf(f), fontSize = 18.sp, color = c.ink, maxLines = 1, softWrap = false)
-                    CText(f.name, size = 10.sp, weight = 600, color = c.muted, maxLines = 1)
+                val starred = f.id in favourites
+                Box(Modifier.width(108.dp).height(50.dp)) {
+                    Column(
+                        Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(12.dp)).background(c.paper)
+                            .border(2.dp, if (on) c.accent else Color.Transparent, RoundedCornerShape(12.dp))
+                            .pressable({ ed.itemOp { it.copy(font = f.id) } }, role = Role.RadioButton, label = f.name).semantics { selected = on },
+                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text("Collage", fontFamily = fontFamilyOf(f), fontSize = 18.sp, color = c.ink, maxLines = 1, softWrap = false)
+                        CText(f.name, size = 10.sp, weight = 600, color = c.muted, maxLines = 1)
+                    }
+                    Box(
+                        Modifier.align(Alignment.TopEnd).size(28.dp).pressable({ onToggleFavourite(f.id) }, label = if (starred) "Remove ${f.name} from favourites" else "Add ${f.name} to favourites"),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CIcon(if (starred) Icon.StarFilled else Icon.Star, size = 14.dp, tint = if (starred) c.accent else c.muted, strokeWidth = 2f)
+                    }
                 }
             }
         }
@@ -216,6 +236,7 @@ private fun ColorPanel(ed: EditorState, item: CanvasItem, onCustomColor: (Long, 
     val target = ed.colorTarget
     val current: Long? = when (target) {
         ColorTarget.Fill -> item.fill
+        ColorTarget.Gradient -> item.fill2
         ColorTarget.Stroke -> if (item.strokeW > 0f) item.strokeColor else null
         ColorTarget.Highlight -> item.bg
     }
@@ -223,6 +244,7 @@ private fun ColorPanel(ed: EditorState, item: CanvasItem, onCustomColor: (Long, 
         ed.itemOp { x ->
             when (target) {
                 ColorTarget.Fill -> if (col == null && !(x.strokeW > 0f)) x.copy(fill = null, strokeW = .07f, strokeColor = 0xFFFFFFFF) else x.copy(fill = col)
+                ColorTarget.Gradient -> x.copy(fill2 = col)
                 ColorTarget.Stroke -> if (col != null) x.copy(strokeColor = col, strokeW = if (x.strokeW > 0f) x.strokeW else .09f) else x.copy(strokeW = 0f)
                 ColorTarget.Highlight -> x.copy(bg = col)
             }
@@ -230,7 +252,34 @@ private fun ColorPanel(ed: EditorState, item: CanvasItem, onCustomColor: (Long, 
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScrollRow(padding = 14.dp, spacing = 6.dp) { ColorTarget.entries.forEach { t -> TabChip(t.label, target == t, { ed.colorTarget = t }) } }
-        ColorRow(TextColors.palette, current, set, onCustom = { onCustomColor(current ?: 0xFFFF4F8B, { col -> set(col) }) }, allowNone = target != ColorTarget.Fill)
+        if (target == ColorTarget.Gradient) GradientPicker(ed, item, onCustomColor)
+        else ColorRow(TextColors.palette, current, set, onCustom = { onCustomColor(current ?: 0xFFFF4F8B, { col -> set(col) }) }, allowNone = target != ColorTarget.Fill)
+    }
+}
+
+/** Gradient presets, and once one is on, its end colour and angle. */
+@Composable
+private fun GradientPicker(ed: EditorState, item: CanvasItem, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
+    val c = CTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ScrollRow(padding = 14.dp, spacing = 10.dp, state = rememberScrollState(), tiles = true) {
+            TileWithLabel("Off", item.fill2 == null, { ed.itemOp { it.copy(fill2 = null) } }) {
+                Box(Modifier.fillMaxSize().background(DARK_TILE), contentAlignment = Alignment.Center) { CText("Aa", size = 18.sp, weight = 800, color = Color.White) }
+            }
+            TextGradients.all.forEach { g ->
+                TileWithLabel(g.name, item.fill2 == g.to && item.fill == g.from, { ed.itemOp { g.on(it) } }) {
+                    Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(g.from.toInt()), Color(g.to.toInt())), Offset.Zero, Offset(120f, 120f))))
+                }
+            }
+        }
+        val end = item.fill2
+        if (end != null) {
+            CText("END COLOUR", Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+            ColorRow(TextColors.palette, end, { col -> if (col != null) ed.itemOp { it.copy(fill2 = col) } }, onCustom = { onCustomColor(end) { col -> ed.itemOp { it.copy(fill2 = col) } } })
+            Box(Modifier.padding(horizontal = 14.dp)) {
+                SliderOne(ItemSlider.Gradient.get(item), ItemSlider.Gradient.min..ItemSlider.Gradient.max, ItemSlider.Gradient::format, { v -> ed.itemOp { ItemSlider.Gradient.set(it, v) } }, step = 1f, label = "Gradient angle")
+            }
+        }
     }
 }
 

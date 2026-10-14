@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -46,11 +47,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alchemedia.collage.BuildConfig
 import com.alchemedia.collage.R
 import com.alchemedia.collage.data.BillingManager
 import com.alchemedia.collage.data.Exporter
+import com.alchemedia.collage.data.ShareTarget
+import com.alchemedia.collage.data.ShareTargets
 import com.alchemedia.collage.model.HistoryEntry
 import com.alchemedia.collage.model.LayoutCatalog
 import com.alchemedia.collage.render.CollageRenderer
@@ -62,6 +66,7 @@ import com.alchemedia.collage.ui.components.CText
 import com.alchemedia.collage.ui.components.LinkBtn
 import com.alchemedia.collage.ui.components.MetaText
 import com.alchemedia.collage.ui.components.ProTag
+import com.alchemedia.collage.ui.components.ScrollRow
 import com.alchemedia.collage.ui.components.SheetHost
 import com.alchemedia.collage.ui.components.SheetTitle
 import com.alchemedia.collage.ui.components.lerpColor
@@ -164,7 +169,7 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
         }
     }
 
-    fun perform(share: Boolean) {
+    fun perform(share: Boolean, packageName: String? = null) {
         if (saving) return
         saving = true
         scope.launch {
@@ -176,20 +181,27 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
             vm.store.recordHistory(project, bmp.width, bmp.height, watermark = !usePro)
             vm.closeSheets()
             if (share) {
-                val send = Intent(Intent.ACTION_SEND).apply { type = "image/jpeg"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-                runCatching { context.startActivity(Intent.createChooser(send, "Share collage")) }
+                val send = ShareTargets.sendIntent(uri, packageName)
+                // One app's own share screen when asked for; if it won't open, the system chooser.
+                val opened = packageName != null && runCatching { context.startActivity(send) }.isSuccess
+                if (!opened) runCatching { context.startActivity(Intent.createChooser(ShareTargets.sendIntent(uri), "Share collage")) }
             }
             vm.showToast("Saved to your gallery.")
         }
     }
+    var pending by remember { mutableStateOf<Pair<Boolean, String?>?>(null) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) perform(false) else vm.showToast("Allow storage access to save your collage, or use Share instead.")
+        val job = pending
+        pending = null
+        if (granted && job != null) perform(job.first, job.second) else vm.showToast("Allow storage access to save your collage.")
     }
-    fun save() {
+    fun start(share: Boolean, packageName: String? = null) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            pending = share to packageName
             permission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        } else perform(false)
+        } else perform(share, packageName)
     }
+    val targets = remember { ShareTargets.installed(context) }
 
     SheetHost(onDismiss = vm::closeSheet) {
         SheetTitle("Save collage")
@@ -208,9 +220,35 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
             }
         }
         MetaText("$w × $h px${if (usePro) ", no watermark" else ", with watermark"}")
-        CButton(if (saving) "Saving…" else "Save to gallery", ::save, enabled = !saving)
-        CButton("Share", { perform(true) }, style = BtnStyle.Tonal, enabled = !saving)
+        if (targets.isNotEmpty()) {
+            CText("SHARE TO", size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+            ScrollRow(padding = 0.dp, spacing = 14.dp) {
+                targets.forEach { t -> ShareTile(t, enabled = !saving) { start(true, t.packageName) } }
+            }
+        }
+        CButton(if (saving) "Saving…" else "Save to gallery", { start(false) }, enabled = !saving)
+        CButton("Share", { start(true) }, style = BtnStyle.Tonal, enabled = !saving)
         CButton("Keep editing", vm::closeSheet, style = BtnStyle.Ghost)
+    }
+}
+
+/** An installed social app: its own icon with its name underneath. */
+@Composable
+private fun ShareTile(target: ShareTarget, enabled: Boolean, onClick: () -> Unit) {
+    val c = CTheme.colors
+    val context = LocalContext.current
+    val icon = remember(target.packageName) {
+        runCatching { context.packageManager.getApplicationIcon(target.packageName).toBitmap(96, 96).asImageBitmap() }.getOrNull()
+    }
+    Column(
+        Modifier.width(62.dp).pressable(onClick, label = "Share to ${target.label}", enabled = enabled),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Box(Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(c.tint), contentAlignment = Alignment.Center) {
+            if (icon != null) Image(icon, null, Modifier.size(46.dp), contentScale = ContentScale.Fit)
+            else CText(target.label.take(1), size = 18.sp, weight = 800, color = c.onTint)
+        }
+        CText(target.label, size = 11.sp, weight = 600, color = c.muted, maxLines = 1)
     }
 }
 

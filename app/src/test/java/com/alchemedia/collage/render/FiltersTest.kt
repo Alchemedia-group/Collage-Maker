@@ -48,4 +48,25 @@ class FiltersTest {
         assertEquals(.3f, out[0], .001f)
         assertEquals(.9f, out[2], .001f)
     }
+
+    @Test fun photoSlidersAtZeroDoNothing() = assertNull(Filters.adjust(0f, 0f, 0f))
+
+    @Test fun brightnessSliderBrightensAndDarkens() {
+        assertEquals(1.3f, Filters.adjust(.5f, 0f, 0f)!!.array[0], .001f)
+        assertEquals(.7f, Filters.adjust(-.5f, 0f, 0f)!!.array[6], .001f)
+    }
+
+    @Test fun saturationSliderAllTheWayDownIsGrey() {
+        val a = Filters.adjust(0f, 0f, -1f)!!.array
+        // every output channel is the same mix of the input channels
+        assertEquals(a[0], a[5], .001f)
+        assertEquals(a[0], a[10], .001f)
+        assertEquals(a[1], a[6], .001f)
+    }
+
+    @Test fun contrastSliderSpreadsTheTones() {
+        val a = Filters.adjust(0f, .5f, 0f)!!.array
+        assertEquals(1.3f, a[0], .001f)
+        assertEquals((.5f - .5f * 1.3f) * 255f, a[4], .01f)
+    }
 }

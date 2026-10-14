@@ -3,6 +3,8 @@ package com.alchemedia.collage.render
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
@@ -28,8 +30,11 @@ data class UiOptions(
     val dpr: Float = 1f,
 )
 
-/** Where the photo sits inside its cell: destination rectangle for the full bitmap. */
-data class PhotoBox(val left: Float, val top: Float, val width: Float, val height: Float)
+/**
+ * Where a photo sits inside its cell: the centre of the whole bitmap, its size once scaled, how far it is turned (degrees,
+ * clockwise) and how far it can slide along its own axes before the cell would show a gap ([slackX], [slackY]).
+ */
+data class PhotoPlacement(val cx: Float, val cy: Float, val width: Float, val height: Float, val rotation: Float, val slackX: Float, val slackY: Float)
 
 /**
  * Draws a collage onto any Canvas. The editor, the previews and the exported picture all go through this one
@@ -64,7 +69,7 @@ object CollageRenderer {
         rects.forEachIndexed { i, r ->
             val content = project.cells.getOrNull(i) ?: CellContent()
             val bmp = content.photoId?.let { photos.bitmap(it) }
-            if (bmp != null) drawPhotoCell(canvas, r, content, bmp, project)
+            if (bmp != null) drawPhotoCell(canvas, r, content, bmp, project, i)
             else if (ui != null) drawEmptyCell(canvas, r, project, dpr)
         }
         if (ui != null && ui.selectedCell in rects.indices) drawCellSelection(canvas, rects[ui.selectedCell], project, ui)
@@ -80,20 +85,36 @@ object CollageRenderer {
         return bmp
     }
 
-    /** The photo's destination rectangle for a cell (pan and zoom applied). [r] is the rectangle the photo must cover. */
-    fun photoBox(rx: Float, ry: Float, rw: Float, rh: Float, cell: CellContent, imgW: Int, imgH: Int): PhotoBox {
-        val s = max(rw / imgW, rh / imgH) * cell.zoom
+    /**
+     * Where the photo goes for a cell: it is scaled to cover [rw] x [rh] at (rx, ry) however it is turned, zoomed by
+     * the cell's zoom, then slid by the pan. Pan runs along the photo's own axes, so a turned photo still never shows a gap.
+     */
+    fun photoPlacement(rx: Float, ry: Float, rw: Float, rh: Float, cell: CellContent, imgW: Int, imgH: Int): PhotoPlacement {
+        val deg = cell.rotation
+        val a = Math.toRadians(deg.toDouble())
+        val cosA = cos(a).toFloat()
+        val sinA = sin(a).toFloat()
+        // The cell as seen in the photo's own turned frame: the box that must stay covered.
+        val needW = rw * abs(cosA) + rh * abs(sinA)
+        val needH = rw * abs(sinA) + rh * abs(cosA)
+        val s = max(needW / imgW, needH / imgH) * cell.zoom
         val dw = imgW * s
         val dh = imgH * s
-        val ox = (dw - rw) / 2
-        val oy = (dh - rh) / 2
-        return PhotoBox(rx - ox + ox * cell.panX, ry - oy + oy * cell.panY, dw, dh)
+        val slackX = (dw - needW) / 2
+        val slackY = (dh - needH) / 2
+        val lx = slackX * cell.panX
+        val ly = slackY * cell.panY
+        return PhotoPlacement(rx + rw / 2 + lx * cosA - ly * sinA, ry + rh / 2 + lx * sinA + ly * cosA, dw, dh, deg, slackX, slackY)
     }
 
     /** The square a shape's photo has to cover (shapes may be scaled and rotated inside the cell). */
-    fun photoRect(r: CellRect): RectF {
+    fun photoRect(r: CellRect, project: CollageProject? = null): RectF {
         val d = r.cell
-        if (!d.isShape || d.fill) return RectF(r.x, r.y, r.right, r.bottom)
+        if (!d.isShape || d.fill) {
+            val rect = RectF(r.x, r.y, r.right, r.bottom)
+            // Inside a frame the photo only fills what the frame leaves free.
+            return if (project != null && !d.isShape && !d.isLetter && project.frame != Frames.NONE) Frames.inner(project.frame, rect, project.frameAmount) else rect
+        }
         val side = min(r.width, r.height) * d.scale
         val a = Math.toRadians(d.rotation.toDouble())
         val s = (side * (abs(cos(a)) + abs(sin(a)))).toFloat()
@@ -110,39 +131,75 @@ object CollageRenderer {
         return Path().apply { addRoundRect(RectF(r.x, r.y, r.right, r.bottom), rad, rad, Path.Direction.CW) }
     }
 
-    private fun drawBitmapIn(canvas: Canvas, bmp: Bitmap, box: PhotoBox, project: CollageProject) {
-        val dst = RectF(box.left, box.top, box.left + box.width, box.top + box.height)
+    private fun drawBitmapIn(canvas: Canvas, bmp: Bitmap, pl: PhotoPlacement, content: CellContent, project: CollageProject) {
+        val dst = RectF(-pl.width / 2, -pl.height / 2, pl.width / 2, pl.height / 2)
         val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
-        val filter = Filters.colorFilter(project.filter)
+        val look = Filters.adjust(content.brightness, content.contrast, content.saturation)
+        val filter = Filters.matrix(project.filter)
         val amount = project.filterAmount.coerceIn(0f, 1f)
+        canvas.save()
+        canvas.translate(pl.cx, pl.cy)
+        canvas.rotate(pl.rotation)
+        if (content.flipH || content.flipV) canvas.scale(if (content.flipH) -1f else 1f, if (content.flipV) -1f else 1f)
         if (filter == null || amount <= 0f) {
+            paint.colorFilter = look?.let { ColorMatrixColorFilter(it) }
             canvas.drawBitmap(bmp, null, dst, paint)
-            return
+        } else {
+            // Below full strength the filtered copy is blended over the original.
+            if (amount < .999f) {
+                paint.colorFilter = look?.let { ColorMatrixColorFilter(it) }
+                canvas.drawBitmap(bmp, null, dst, paint)
+            }
+            val both = if (look == null) filter else ColorMatrix(look).also { it.postConcat(filter) }
+            paint.colorFilter = ColorMatrixColorFilter(both)
+            if (amount < .999f) paint.alpha = (amount * 255).toInt()
+            canvas.drawBitmap(bmp, null, dst, paint)
         }
-        // Below full strength the filtered copy is blended over the original.
-        if (amount < .999f) canvas.drawBitmap(bmp, null, dst, paint)
-        paint.colorFilter = filter
-        if (amount < .999f) paint.alpha = (amount * 255).toInt()
-        canvas.drawBitmap(bmp, null, dst, paint)
+        canvas.restore()
     }
 
-    private fun drawPhotoCell(canvas: Canvas, r: CellRect, content: CellContent, bmp: Bitmap, project: CollageProject) {
+    /** Draws a photo into [rect] with rounded corners of [radius] (a straight clip when there is no rounding). */
+    private fun drawPhotoClipped(canvas: Canvas, bmp: Bitmap, content: CellContent, project: CollageProject, rect: RectF, radius: Float) {
+        val pl = photoPlacement(rect.left, rect.top, rect.width(), rect.height(), content, bmp.width, bmp.height)
+        if (radius <= .5f) {
+            canvas.save()
+            canvas.clipRect(rect)
+            drawBitmapIn(canvas, bmp, pl, content, project)
+            canvas.restore()
+            return
+        }
+        // Masking through a layer gives smooth (anti-aliased) edges for rounded corners.
+        val layer = canvas.saveLayer(RectF(rect).apply { inset(-2f, -2f) }, null)
+        drawBitmapIn(canvas, bmp, pl, content, project)
+        clearOutside(canvas, Path().apply { addRoundRect(rect, radius, radius, Path.Direction.CW) })
+        canvas.restoreToCount(layer)
+    }
+
+    private fun drawPhotoCell(canvas: Canvas, r: CellRect, content: CellContent, bmp: Bitmap, project: CollageProject, index: Int) {
         val d = r.cell
         if (d.isLetter) { drawLetterCell(canvas, r, content, bmp, project); return }
+        if (!d.isShape && project.frame != Frames.NONE) {
+            val rect = RectF(r.x, r.y, r.right, r.bottom)
+            val radius = min(CollageGeometry.cornerRadius(r, project.cornerPercent), min(r.width, r.height) / 2)
+            Frames.draw(canvas, project.frame, rect, radius, project.frameColor.toInt(), project.frameAmount, index) { inner, innerRadius ->
+                drawPhotoClipped(canvas, bmp, content, project, inner, innerRadius)
+            }
+            return
+        }
         val pr = photoRect(r)
-        val box = photoBox(pr.left, pr.top, pr.width(), pr.height(), content, bmp.width, bmp.height)
+        val pl = photoPlacement(pr.left, pr.top, pr.width(), pr.height(), content, bmp.width, bmp.height)
         val radius = CollageGeometry.cornerRadius(r, project.cornerPercent)
         if (!d.isShape && radius <= 0.5f) {
             canvas.save()
             canvas.clipRect(r.x, r.y, r.right, r.bottom)
-            drawBitmapIn(canvas, bmp, box, project)
+            drawBitmapIn(canvas, bmp, pl, content, project)
             canvas.restore()
             return
         }
         // Masking through a layer gives smooth (anti-aliased) edges for rounded corners and shapes.
         val bounds = RectF(r.x - 2, r.y - 2, r.right + 2, r.bottom + 2).also { if (d.isShape) it.union(pr) }
         val layer = canvas.saveLayer(bounds, null)
-        drawBitmapIn(canvas, bmp, box, project)
+        drawBitmapIn(canvas, bmp, pl, content, project)
         clearOutside(canvas, cellOutline(r, project))
         canvas.restoreToCount(layer)
     }
@@ -171,8 +228,8 @@ object CollageRenderer {
         val text = r.cell.text ?: return
         val bounds = RectF(r.x, r.y, r.right, r.bottom)
         val layer = canvas.saveLayer(bounds, null)
-        val box = photoBox(r.x, r.y, r.width, r.height, content, bmp.width, bmp.height)
-        drawBitmapIn(canvas, bmp, box, project)
+        val pl = photoPlacement(r.x, r.y, r.width, r.height, content, bmp.width, bmp.height)
+        drawBitmapIn(canvas, bmp, pl, content, project)
         val (p, x, y) = letterFit(text, r.width, r.height)
         val glyphs = Path()
         p.getTextPath(text, 0, text.length, r.x + x, r.y + y, glyphs)

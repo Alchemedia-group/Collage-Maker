@@ -73,6 +73,7 @@ private fun EditorTab.icon(): Icon = when (this) {
 fun EditorScreen(vm: AppViewModel, ed: EditorState) {
     val c = CTheme.colors
     val pro by vm.settings.pro.collectAsStateWithLifecycle()
+    val favouriteFonts by vm.settings.favouriteFonts.collectAsStateWithLifecycle()
     var colorRequest by remember { mutableStateOf<Pair<Long, (Long) -> Unit>?>(null) }
     val focus = LocalFocusManager.current
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS)) { uris ->
@@ -113,7 +114,7 @@ fun EditorScreen(vm: AppViewModel, ed: EditorState) {
                             EditorTab.Shape -> ShapePanel(ed)
                             EditorTab.Style -> StylePanel(ed, vm, onCustomColor) { bgPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
                             EditorTab.Photo -> PhotoPanel(vm, ed) { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
-                            EditorTab.Text -> TextPanel(ed, onCustomColor)
+                            EditorTab.Text -> TextPanel(ed, onCustomColor, favouriteFonts, vm.settings::toggleFavouriteFont)
                             EditorTab.Sticker -> StickerPanel(ed, onCustomColor)
                         }
                     }
