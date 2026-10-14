@@ -29,6 +29,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:theme="@style/Theme.CollageMaker.Starting"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize|density">

@@ -17,6 +17,9 @@ object AppIcon {
     private const val FROM = 19.16f
     private const val SPAN = 69.68f
 
+    /** The tiles are drawn a little smaller than the launcher square, about its centre, like the launcher icon's foreground. */
+    const val ART_SCALE = 0.88f
+
     private class Tile(val l: Float, val t: Float, val r: Float, val b: Float, val x0: Float, val y0: Float, val x1: Float, val y1: Float, val colors: IntArray, val stops: FloatArray?)
 
     private val tiles = listOf(
@@ -40,6 +43,7 @@ object AppIcon {
         p.shader = RadialGradient(37f, 22f, 52f, 0x73A0C8FF, 0x00A0C8FF, Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, 108f, 108f, p)
         p.shader = null
+        canvas.scale(ART_SCALE, ART_SCALE, 54f, 54f)
         p.color = 0x40050C28
         tiles.forEach { canvas.drawRoundRect(it.l, it.t + 1.1f, it.r, it.b + 1.1f, 4.85f, 4.85f, p) }
         p.color = 0x38050C28

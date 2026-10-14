@@ -11,6 +11,7 @@ coroutines = "1.11.0"
 serialization = "1.11.0"
 junit = "4.13.2"
 billing = "9.1.0"
+splashscreen = "1.0.1"
 robolectric = "4.17"
 roborazzi = "1.76.0"
 androidxTestCore = "1.7.0"
@@ -32,6 +33,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 junit = { module = "junit:junit", version.ref = "junit" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }

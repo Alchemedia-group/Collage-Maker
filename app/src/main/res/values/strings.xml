@@ -199,6 +199,8 @@
     <string name="billing_failed">The purchase didn\'t go through. Please try again.</string>
     <string name="billing_unavailable">Google Play isn\'t available right now. Please try again in a moment.</string>
     <string name="billing_not_started">The purchase didn\'t start. Please try again.</string>
+    <string name="billing_pending">Your payment is pending. Pro switches on as soon as it goes through.</string>
+    <string name="billing_restore_none">No active Pro subscription was found for this Google account.</string>
     <string name="added_photos_fail">Couldn\'t read those photos. Please try again.</string>
     <string name="duplicated">Duplicated.</string>
     <string name="copy_suffix">" copy"</string>

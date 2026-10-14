@@ -134,7 +134,7 @@ fun ProSheet(vm: AppViewModel) {
             Box(Modifier.align(Alignment.CenterHorizontally)) { LinkBtn(Strings.get(R.string.restore_purchase), billing::restore) }
         }
         if (BuildConfig.DEBUG) {
-            CButton(if (pro) "Debug: switch Pro off" else "Debug: switch Pro on (no payment)", { vm.settings.setPro(!pro) }, style = BtnStyle.Ghost, small = true, modifier = Modifier.align(Alignment.CenterHorizontally))
+            CButton(if (pro) "Debug: switch Pro off" else "Debug: switch Pro on (no payment)", { vm.settings.debugPro = !pro; vm.settings.setPro(!pro) }, style = BtnStyle.Ghost, small = true, modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }

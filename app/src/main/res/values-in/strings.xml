@@ -198,6 +198,8 @@
     <string name="billing_failed">Pembelian tidak berhasil. Silakan coba lagi.</string>
     <string name="billing_unavailable">Google Play sedang tidak tersedia. Silakan coba lagi sebentar lagi.</string>
     <string name="billing_not_started">Pembelian tidak dapat dimulai. Silakan coba lagi.</string>
+    <string name="billing_pending">Pembayaran Anda sedang tertunda. Pro akan aktif begitu pembayaran selesai.</string>
+    <string name="billing_restore_none">Tidak ditemukan langganan Pro yang aktif untuk akun Google ini.</string>
     <string name="added_photos_fail">Foto itu tidak dapat dibaca. Silakan coba lagi.</string>
     <string name="duplicated">Digandakan.</string>
     <string name="copy_suffix">" (salinan)"</string>

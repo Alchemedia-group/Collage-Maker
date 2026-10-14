@@ -86,6 +86,8 @@ EN = {
     "billing_failed": "The purchase didn't go through. Please try again.",
     "billing_unavailable": "Google Play isn't available right now. Please try again in a moment.",
     "billing_not_started": "The purchase didn't start. Please try again.",
+    "billing_pending": "Your payment is pending. Pro switches on as soon as it goes through.",
+    "billing_restore_none": "No active Pro subscription was found for this Google account.",
     # ---- view model messages
     "added_photos_fail": "Couldn't read those photos. Please try again.",
     "duplicated": "Duplicated.", "copy_suffix": " copy",

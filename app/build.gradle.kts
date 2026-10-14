@@ -16,8 +16,8 @@ android {
         applicationId = "com.alchemedia.collage"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.4.0"
+        versionCode = 8
+        versionName = "0.4.1"
     }
 
     buildTypes {
@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.billing.ktx)
+    implementation(libs.core.splashscreen)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

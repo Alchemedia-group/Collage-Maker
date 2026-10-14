@@ -6,7 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.alchemedia.collage.ui.SplashOverlay
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -19,13 +26,21 @@ class MainActivity : ComponentActivity() {
     private val viewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen() // swaps the starting theme for the normal one; the app's own splash takes over from the system one
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideNavigationBar()
         val app = application as CollageApp
         setContent {
             CompositionLocalProvider(LocalApp provides app) {
-                CollageTheme { AppRoot(viewModel) }
+                CollageTheme {
+                    // only on a cold start: a recreate (language change, rotation) keeps the saved 'false'
+                    var splash by rememberSaveable { mutableStateOf(true) }
+                    Box {
+                        AppRoot(viewModel)
+                        if (splash) SplashOverlay(onDone = { splash = false })
+                    }
+                }
             }
         }
     }

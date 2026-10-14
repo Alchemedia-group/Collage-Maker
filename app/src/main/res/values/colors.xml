@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="paper">#F2F4F7</color>
+    <color name="splash_blue">#2557D6</color>
 </resources>

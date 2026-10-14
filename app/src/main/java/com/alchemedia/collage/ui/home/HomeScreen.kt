@@ -92,15 +92,16 @@ fun HomeScreen(vm: AppViewModel) {
     val total = remember(vm.mineVersion) { LayoutCatalog.all.size }
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding()) {
-        Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 18.dp, end = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+        Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 16.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Logo(Modifier.size(28.dp))
-                CText("Photo Collage", size = 25.sp, weight = 800, display = true, letterSpacing = (-.75).sp, maxLines = 1)
+                // the bar also holds language, history and Go Pro, so the name has to fit beside them on a 360dp phone
+                CText("Photo Collage", size = 20.sp, weight = 800, display = true, letterSpacing = (-.75).sp, maxLines = 1)
             }
             if (pro) ProTag(Modifier.padding(end = 4.dp))
-            IconBtn(Icon.Globe, Strings.get(R.string.language), { vm.openSheet(Sheet.Language) })
-            IconBtn(Icon.History, Strings.get(R.string.history), { vm.openHistory() })
-            if (!pro) Pill(Strings.get(R.string.go_pro), { vm.openSheet(Sheet.Pro) }, ink = true)
+            IconBtn(Icon.Globe, Strings.get(R.string.language), { vm.openSheet(Sheet.Language) }, size = 36.dp)
+            IconBtn(Icon.History, Strings.get(R.string.history), { vm.openHistory() }, size = 36.dp)
+            if (!pro) Pill(Strings.get(R.string.go_pro), { vm.openSheet(Sheet.Pro) }, Modifier.padding(start = 6.dp), ink = true)
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)) {
             item { Hero(onNew = { vm.startNew() }, onDesign = { vm.openDesigner(BrowseTarget.Home) }) }

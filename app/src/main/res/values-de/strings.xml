@@ -198,6 +198,8 @@
     <string name="billing_failed">Der Kauf ist nicht zustande gekommen. Bitte versuche es erneut.</string>
     <string name="billing_unavailable">Google Play ist gerade nicht verfügbar. Bitte versuche es gleich noch einmal.</string>
     <string name="billing_not_started">Der Kauf konnte nicht gestartet werden. Bitte versuche es erneut.</string>
+    <string name="billing_pending">Deine Zahlung ist noch ausstehend. Pro wird aktiviert, sobald sie abgeschlossen ist.</string>
+    <string name="billing_restore_none">Für dieses Google-Konto wurde kein aktives Pro-Abo gefunden.</string>
     <string name="added_photos_fail">Die Fotos konnten nicht gelesen werden. Bitte versuche es erneut.</string>
     <string name="duplicated">Dupliziert.</string>
     <string name="copy_suffix">" (Kopie)"</string>

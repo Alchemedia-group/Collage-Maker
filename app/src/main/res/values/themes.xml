@@ -6,4 +6,11 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <!-- Shown by the system while the app starts: plain icon-blue with nothing on it. The app then fades in its own splash, which has the gradient and the big icon. -->
+    <style name="Theme.CollageMaker.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_blue</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_empty</item>
+        <item name="postSplashScreenTheme">@style/Theme.CollageMaker</item>
+    </style>
 </resources>

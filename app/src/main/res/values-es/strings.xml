@@ -198,6 +198,8 @@
     <string name="billing_failed">La compra no se completó. Inténtalo de nuevo.</string>
     <string name="billing_unavailable">Google Play no está disponible ahora mismo. Inténtalo de nuevo en un momento.</string>
     <string name="billing_not_started">La compra no se inició. Inténtalo de nuevo.</string>
+    <string name="billing_pending">Tu pago está pendiente. Pro se activará en cuanto se complete.</string>
+    <string name="billing_restore_none">No se encontró ninguna suscripción Pro activa en esta cuenta de Google.</string>
     <string name="added_photos_fail">No se pudieron leer esas fotos. Inténtalo de nuevo.</string>
     <string name="duplicated">Duplicado.</string>
     <string name="copy_suffix">" (copia)"</string>

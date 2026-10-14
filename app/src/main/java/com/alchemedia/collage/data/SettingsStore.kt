@@ -32,6 +32,11 @@ class SettingsStore(context: Context) {
         _language.value = tag
     }
 
+    /** Debug builds only: keeps Pro on even when Play says there is no subscription, so the Pro features can be tried. */
+    var debugPro: Boolean
+        get() = prefs.getBoolean(KEY_DEBUG_PRO, false)
+        set(value) { prefs.edit().putBoolean(KEY_DEBUG_PRO, value).apply() }
+
     fun setPro(value: Boolean) {
         prefs.edit().putBoolean(KEY_PRO, value).apply()
         _pro.value = value
@@ -39,6 +44,7 @@ class SettingsStore(context: Context) {
 
     private companion object {
         const val KEY_PRO = "pro"
+        const val KEY_DEBUG_PRO = "debug_pro"
         const val KEY_FAVOURITE_FONTS = "favourite_fonts"
         const val KEY_LANGUAGE = "language"
     }

@@ -77,6 +77,8 @@ T = {
     "billing_failed": "Pembelian tidak berhasil. Silakan coba lagi.",
     "billing_unavailable": "Google Play sedang tidak tersedia. Silakan coba lagi sebentar lagi.",
     "billing_not_started": "Pembelian tidak dapat dimulai. Silakan coba lagi.",
+    "billing_pending": "Pembayaran Anda sedang tertunda. Pro akan aktif begitu pembayaran selesai.",
+    "billing_restore_none": "Tidak ditemukan langganan Pro yang aktif untuk akun Google ini.",
     "added_photos_fail": "Foto itu tidak dapat dibaca. Silakan coba lagi.",
     "duplicated": "Digandakan.", "copy_suffix": " (salinan)",
     "deleted_collage": "“%1$s” dihapus. Salinan di Riwayat tetap ada.", "removed_history": "Dihapus dari Riwayat.", "history_cleared": "Riwayat dikosongkan.",

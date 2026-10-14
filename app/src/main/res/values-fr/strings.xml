@@ -198,6 +198,8 @@
     <string name="billing_failed">L’achat n’a pas abouti. Réessaie.</string>
     <string name="billing_unavailable">Google Play n’est pas disponible pour le moment. Réessaie dans un instant.</string>
     <string name="billing_not_started">L’achat n’a pas démarré. Réessaie.</string>
+    <string name="billing_pending">Votre paiement est en attente. Pro s’activera dès qu’il sera validé.</string>
+    <string name="billing_restore_none">Aucun abonnement Pro actif n’a été trouvé pour ce compte Google.</string>
     <string name="added_photos_fail">Impossible de lire ces photos. Réessaie.</string>
     <string name="duplicated">Dupliqué.</string>
     <string name="copy_suffix">" (copie)"</string>

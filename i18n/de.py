@@ -77,6 +77,8 @@ T = {
     "billing_failed": "Der Kauf ist nicht zustande gekommen. Bitte versuche es erneut.",
     "billing_unavailable": "Google Play ist gerade nicht verfügbar. Bitte versuche es gleich noch einmal.",
     "billing_not_started": "Der Kauf konnte nicht gestartet werden. Bitte versuche es erneut.",
+    "billing_pending": "Deine Zahlung ist noch ausstehend. Pro wird aktiviert, sobald sie abgeschlossen ist.",
+    "billing_restore_none": "Für dieses Google-Konto wurde kein aktives Pro-Abo gefunden.",
     "added_photos_fail": "Die Fotos konnten nicht gelesen werden. Bitte versuche es erneut.",
     "duplicated": "Dupliziert.", "copy_suffix": " (Kopie)",
     "deleted_collage": "„%1$s“ gelöscht. Kopien im Verlauf bleiben erhalten.", "removed_history": "Aus dem Verlauf entfernt.", "history_cleared": "Verlauf geleert.",
