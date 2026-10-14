@@ -1,5 +1,6 @@
 package com.alchemedia.collage.render
 
+import com.alchemedia.collage.Strings
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -13,7 +14,9 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** A photo frame. [color] and [amount] are what picking it sets (the user can change both afterwards). */
-data class FrameDef(val id: String, val name: String, val color: Long, val amount: Float)
+data class FrameDef(val id: String, val name: String, val color: Long, val amount: Float) {
+    val title: String get() = Strings.named("frame_$id", name)
+}
 
 /**
  * Frames drawn around each rectangular photo: a plain border, a polaroid card, a film strip, a postage stamp, torn paper,

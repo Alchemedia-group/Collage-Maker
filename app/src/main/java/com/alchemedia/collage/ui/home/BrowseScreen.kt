@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.home
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -105,24 +107,24 @@ fun BrowseScreen(vm: AppViewModel, target: BrowseTarget, selectedId: String?, on
 
     fun useWord() {
         val layout = LayoutCatalog.wordLayout(word)
-        if (layout == null) { vm.showToast("Type up to 8 letters or numbers."); return }
+        if (layout == null) { vm.showToast(Strings.get(R.string.word_hint)); return }
         word = ""
         onChoose(layout.id)
     }
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding().imePadding()) {
-        AppBar(onBack = { vm.closeOverlay() }, backIcon = Icon.Close, backLabel = "Close") {
-            BarTitle("All layouts", Modifier.weight(1f))
+        AppBar(onBack = { vm.closeOverlay() }, backIcon = Icon.Close, backLabel = Strings.get(R.string.close)) {
+            BarTitle(Strings.get(R.string.all_layouts), Modifier.weight(1f))
             CountBadge(results.size.toString())
         }
-        Box(Modifier.padding(horizontal = 16.dp)) { SearchField(query, { query = it }, "Search: heart, love, grid, mosaic") }
-        FieldLabel("HOW MANY PHOTOS?")
+        Box(Modifier.padding(horizontal = 16.dp)) { SearchField(query, { query = it }, Strings.get(R.string.search_hint)) }
+        FieldLabel(Strings.get(R.string.label_how_many))
         LazyRow(Modifier.fillMaxWidth().edgeFade(countState), state = countState, contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(CountFilter.entries) { f -> FilterChip(f.label, count == f, { count = f }) }
+            items(CountFilter.entries) { f -> FilterChip(f.title, count == f, { count = f }) }
         }
         LazyRow(Modifier.fillMaxWidth().padding(top = 10.dp).edgeFade(catState), state = catState, contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            item { FilterChip("All", cat == null, { cat = null }) }
-            items(LayoutCategories.browsable) { (id, name) -> FilterChip(name, cat == id, { cat = id }) }
+            item { FilterChip(Strings.get(R.string.all), cat == null, { cat = null }) }
+            items(LayoutCategories.browsable) { (id, _) -> FilterChip(LayoutCategories.label(id), cat == id, { cat = id }) }
         }
         if (showWord) {
             val shape = RoundedCornerShape(16.dp)
@@ -138,7 +140,7 @@ fun BrowseScreen(vm: AppViewModel, target: BrowseTarget, selectedId: String?, on
                         maxLength = 8, capitalization = KeyboardCapitalization.Characters, onDone = ::useWord,
                     )
                 }
-                CButton("Use", ::useWord, small = true)
+                CButton(Strings.get(R.string.use), ::useWord, small = true)
             }
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 28.dp)) {
@@ -146,13 +148,13 @@ fun BrowseScreen(vm: AppViewModel, target: BrowseTarget, selectedId: String?, on
                 item(key = "design") {
                     Row(
                         Modifier.padding(top = 13.dp, bottom = 2.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(c.card).dashedBorder(c.line, 18)
-                            .pressable({ vm.closeOverlay(); vm.openDesigner(target) }, label = "Design your own layout").padding(horizontal = 14.dp, vertical = 12.dp),
+                            .pressable({ vm.closeOverlay(); vm.openDesigner(target) }, label = Strings.get(R.string.design_own_layout)).padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(c.tint), contentAlignment = Alignment.Center) { CIcon(Icon.Pencil, tint = c.onTint) }
                         Column {
-                            CText("Design your own layout", size = 16.sp, weight = 700, display = true)
-                            CText("Draw cells, pick shapes, save to My layouts", size = 12.sp, color = c.muted)
+                            CText(Strings.get(R.string.design_own_layout), size = 16.sp, weight = 700, display = true)
+                            CText(Strings.get(R.string.design_own_sub), size = 12.sp, color = c.muted)
                         }
                     }
                 }
@@ -160,9 +162,9 @@ fun BrowseScreen(vm: AppViewModel, target: BrowseTarget, selectedId: String?, on
             if (rows.isEmpty()) {
                 item(key = "empty") {
                     Column(Modifier.fillMaxWidth().padding(vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CText(if (cat == "mine") "No saved layouts yet" else "No layouts match", size = 22.sp, weight = 700, display = true)
+                        CText(if (cat == "mine") Strings.get(R.string.no_saved_layouts) else Strings.get(R.string.no_layouts_match), size = 22.sp, weight = 700, display = true)
                         CText(
-                            if (cat == "mine") "Tap Design your own layout above to make one." else "Try another word, or set the photo count to Any.",
+                            if (cat == "mine") Strings.get(R.string.tap_design_above) else Strings.get(R.string.try_another_word),
                             Modifier.padding(top = 6.dp), size = 14.sp, color = c.muted,
                         )
                     }
@@ -172,7 +174,7 @@ fun BrowseScreen(vm: AppViewModel, target: BrowseTarget, selectedId: String?, on
                 when (val row = rows[i]) {
                     is BrowseRow.Header -> Row(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 8.dp, start = 2.dp, end = 2.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                         CText(row.title, size = 18.sp, weight = 700, display = true, letterSpacing = (-.4).sp)
-                        CText("${row.count} layout${if (row.count == 1) "" else "s"}", size = 12.sp, color = c.muted)
+                        CText(Strings.plural(R.plurals.p_layouts, row.count), size = 12.sp, color = c.muted)
                     }
                     is BrowseRow.Tiles -> Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.layouts.forEach { l ->
@@ -194,20 +196,20 @@ private fun BrowseTile(layout: Layout, selected: Boolean, modifier: Modifier, on
     val c = CTheme.colors
     Box(modifier) {
         Column(
-            Modifier.fillMaxWidth().pressable(onClick, role = Role.RadioButton, label = "${layout.name}, ${layout.cells.size} photos").semantics { this.selected = selected },
+            Modifier.fillMaxWidth().pressable(onClick, role = Role.RadioButton, label = Strings.get(R.string.layout_photos_desc, layout.title, Strings.plural(R.plurals.p_photos, layout.cells.size))).semantics { this.selected = selected },
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp)).background(if (selected) c.accent else lerpColor(c.card, c.ink, .07f)).padding(12.dp)) {
                 LayoutIcon(layout, if (selected) c.onAccent else lerpColor(c.card, c.ink, .52f), Modifier.fillMaxSize())
             }
             Column(Modifier.padding(horizontal = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                CText(layout.name, size = 13.sp, weight = 700, maxLines = 1)
-                CText("${layout.cells.size} photo${if (layout.cells.size == 1) "" else "s"}", size = 11.sp, color = c.muted)
+                CText(layout.title, size = 13.sp, weight = 700, maxLines = 1)
+                CText(Strings.plural(R.plurals.p_photos, layout.cells.size), size = 11.sp, color = c.muted)
             }
         }
         if (layout.mine) {
             Box(
-                Modifier.align(Alignment.TopEnd).padding(6.dp).size(28.dp).shadow(3.dp, CircleShape).clip(CircleShape).background(c.card).pressable(onEdit, label = "Edit ${layout.name}"),
+                Modifier.align(Alignment.TopEnd).padding(6.dp).size(28.dp).shadow(3.dp, CircleShape).clip(CircleShape).background(c.card).pressable(onEdit, label = Strings.get(R.string.edit_item, layout.title)),
                 contentAlignment = Alignment.Center,
             ) { CIcon(Icon.Pencil, size = 15.dp) }
         }

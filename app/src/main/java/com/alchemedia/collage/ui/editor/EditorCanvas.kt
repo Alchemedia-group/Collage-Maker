@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.editor
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -51,7 +53,7 @@ fun EditorCanvas(ed: EditorState, modifier: Modifier = Modifier) {
         }
         Canvas(
             Modifier.size(w, h).shadow(10.dp, spotColor = androidx.compose.ui.graphics.Color(0x52101828)).clipToBounds()
-                .semantics { contentDescription = "Collage canvas. Tap a cell, drag to reposition its photo, pinch to zoom." }
+                .semantics { contentDescription = Strings.get(R.string.editor_canvas_desc) }
                 .onSizeChanged { ed.canvasW = it.width.toFloat(); ed.canvasH = it.height.toFloat() }
                 .pointerInput(ed) {
                     awaitEachGesture {

@@ -276,7 +276,7 @@ object CollageRenderer {
         }
     }
 
-    /** The "Photo Collage" pill in the bottom right corner of free exports. */
+    /** The "Photo Collage" pill, with the app icon, in the bottom right corner of free exports. */
     fun drawWatermark(canvas: Canvas, w: Float, h: Float) {
         val s = max(14f, min(w, h) * .034f)
         val label = "Photo Collage"
@@ -295,12 +295,7 @@ object CollageRenderer {
         canvas.drawRoundRect(RectF(x, y, x + pw, y + ph), ph / 2, ph / 2, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb((.9f * .8f * 255).toInt(), 16, 24, 40) })
         val ix = x + padX
         val iy = y + (ph - icon) / 2
-        val u = icon / 2 - 1
-        val light = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF9DB8FF.toInt() }
-        val white = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
-        canvas.drawRoundRect(RectF(ix, iy, ix + u, iy + icon), 2f, 2f, light)
-        canvas.drawRoundRect(RectF(ix + icon / 2 + 1, iy + icon * .55f, ix + icon / 2 + 1 + u, iy + icon), 2f, 2f, light)
-        canvas.drawRoundRect(RectF(ix + icon / 2 + 1, iy, ix + icon / 2 + 1 + u, iy + icon * .45f), 2f, 2f, white)
+        AppIcon.draw(canvas, RectF(ix, iy, ix + icon, iy + icon))
         val fm = text.fontMetrics
         canvas.drawText(label, ix + icon + s * .5f, y + ph / 2 + 1 - (fm.ascent + fm.descent) / 2, text)
     }

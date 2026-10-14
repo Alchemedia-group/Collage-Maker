@@ -1,6 +1,9 @@
 package com.alchemedia.collage.model
 
-data class EmojiCategory(val id: String, val title: String, private val raw: String) {
+import com.alchemedia.collage.Strings
+
+data class EmojiCategory(val id: String, val name: String, private val raw: String) {
+    val title: String get() = Strings.named("emoji_$id", name)
     val items: List<String> get() = raw.split(' ').filter { it.isNotBlank() }
 }
 

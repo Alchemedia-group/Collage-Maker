@@ -1,5 +1,8 @@
 package com.alchemedia.collage.ui
 
+import androidx.annotation.StringRes
+import com.alchemedia.collage.R
+import com.alchemedia.collage.Strings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -29,13 +32,27 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-enum class EditorTab(val label: String) { Layout("Layout"), Shape("Shape"), Style("Style"), Photo("Photo"), Text("Text"), Sticker("Stickers") }
-enum class StyleSub(val label: String) { Color("Color"), Texture("Texture"), Spacing("Spacing"), Filter("Filter"), Image("Image"), Frame("Frame") }
-enum class PhotoSub(val label: String) { Photo("Photo"), Rotate("Rotate"), Light("Light") }
+enum class EditorTab(@StringRes val labelRes: Int) {
+    Layout(R.string.tab_layout), Shape(R.string.tab_shape), Style(R.string.tab_style), Photo(R.string.tab_photo), Text(R.string.tab_text), Sticker(R.string.tab_stickers);
+
+    val label: String get() = Strings.get(labelRes)
+}
+enum class StyleSub(@StringRes val labelRes: Int) {
+    Color(R.string.sub_color), Texture(R.string.sub_texture), Spacing(R.string.sub_spacing), Filter(R.string.sub_filter), Image(R.string.sub_image), Frame(R.string.sub_frame);
+
+    val label: String get() = Strings.get(labelRes)
+}
+enum class PhotoSub(@StringRes val labelRes: Int) {
+    Photo(R.string.tab_photo), Rotate(R.string.sub_rotate), Light(R.string.sub_light);
+
+    val label: String get() = Strings.get(labelRes)
+}
 
 /** One of the three light sliders for the selected photo (-100..100 on screen, -1..1 stored). */
-enum class LightSlider(val label: String) {
-    Brightness("Brightness"), Contrast("Contrast"), Saturation("Saturation");
+enum class LightSlider(@StringRes val labelRes: Int) {
+    Brightness(R.string.light_brightness), Contrast(R.string.light_contrast), Saturation(R.string.light_saturation);
+
+    val label: String get() = Strings.get(labelRes)
 
     fun get(c: CellContent): Float = when (this) { Brightness -> c.brightness; Contrast -> c.contrast; Saturation -> c.saturation } * 100f
     fun set(c: CellContent, v: Float): CellContent {
@@ -43,13 +60,19 @@ enum class LightSlider(val label: String) {
         return when (this) { Brightness -> c.copy(brightness = x); Contrast -> c.copy(contrast = x); Saturation -> c.copy(saturation = x) }
     }
 }
-enum class TextSub(val label: String) { Text("Text"), Font("Font"), Color("Color"), Style("Style"), Adjust("Size") }
+enum class TextSub(@StringRes val labelRes: Int) {
+    Text(R.string.tab_text), Font(R.string.sub_font), Color(R.string.sub_color), Style(R.string.sub_style), Adjust(R.string.sub_size);
+
+    val label: String get() = Strings.get(labelRes)
+}
 
 /** One number the user can slide for the selected item. */
-enum class ItemSlider(val label: String, val min: Float, val max: Float, val step: Float, val unit: String = "%") {
-    Stroke("Outline", 0f, 25f, 1f), Shadow("Shadow", 0f, 100f, 1f), Opacity("Opacity", 20f, 100f, 1f), Size("Size", 3f, 60f, .5f),
-    Spacing("Spacing", -10f, 60f, 1f), Curve("Curve", -100f, 100f, 1f, ""), Rotate("Rotate", -180f, 180f, 1f, "°"),
-    Gradient("Angle", 0f, 360f, 1f, "°");
+enum class ItemSlider(@StringRes val labelRes: Int, val min: Float, val max: Float, val step: Float, val unit: String = "%") {
+    Stroke(R.string.slider_outline, 0f, 25f, 1f), Shadow(R.string.slider_shadow, 0f, 100f, 1f), Opacity(R.string.slider_opacity, 20f, 100f, 1f), Size(R.string.sub_size, 3f, 60f, .5f),
+    Spacing(R.string.slider_spacing, -10f, 60f, 1f), Curve(R.string.slider_curve, -100f, 100f, 1f, ""), Rotate(R.string.sub_rotate, -180f, 180f, 1f, "°"),
+    Gradient(R.string.slider_angle, 0f, 360f, 1f, "°");
+
+    val label: String get() = Strings.get(labelRes)
 
     fun get(it: CanvasItem): Float = when (this) {
         Stroke -> (it.strokeW * 100).roundToInt().toFloat()
@@ -80,7 +103,11 @@ enum class ItemSlider(val label: String, val min: Float, val max: Float, val ste
     }
 }
 
-enum class ColorTarget(val label: String) { Fill("Text"), Gradient("Gradient"), Stroke("Outline"), Highlight("Highlight") }
+enum class ColorTarget(@StringRes val labelRes: Int) {
+    Fill(R.string.tab_text), Gradient(R.string.target_gradient), Stroke(R.string.slider_outline), Highlight(R.string.target_highlight);
+
+    val label: String get() = Strings.get(labelRes)
+}
 
 const val MAX_ZOOM = 20f
 private const val MIN_ITEM = .02f
@@ -189,7 +216,7 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
         update { it.withLayout(layout).copy(aspect = after) }
         selectedCell = -1
         swapping = false
-        if (after != before) vm.showToast("Shape set to ${after.label} to fit this layout.")
+        if (after != before) vm.showToast(Strings.get(R.string.shape_set_to, after.label))
     }
 
     fun setAspect(a: AspectPreset) = update { it.copy(aspect = a) }
@@ -199,7 +226,7 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
     fun setBackgroundFromDevice(uri: android.net.Uri) {
         vm.viewModelScope.launch {
             val ref = vm.store.importPhotos(project.id, listOf(uri)).firstOrNull()
-            if (ref == null) vm.showToast("Couldn't read that picture.") else update { it.copy(backgroundImage = ref) }
+            if (ref == null) vm.showToast(Strings.get(R.string.err_read_picture)) else update { it.copy(backgroundImage = ref) }
         }
     }
 
@@ -285,7 +312,7 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
     fun addFromDevice(uris: List<android.net.Uri>) {
         vm.viewModelScope.launch {
             val refs = vm.store.importPhotos(project.id, uris)
-            if (refs.isEmpty()) vm.showToast("Couldn't read those photos.") else addPhotos(refs)
+            if (refs.isEmpty()) vm.showToast(Strings.get(R.string.err_read_photos)) else addPhotos(refs)
         }
     }
 
@@ -345,7 +372,7 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
             val rest = p.items.filterNot { x -> x.id == it.id }
             p.copy(items = if (front) rest + it else listOf(it) + rest)
         }
-        vm.showToast(if (front) "Brought to front." else "Sent to back.")
+        vm.showToast(Strings.get(if (front) R.string.brought_front else R.string.sent_back))
     }
 
     fun doneEditing() {

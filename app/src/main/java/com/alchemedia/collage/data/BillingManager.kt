@@ -1,5 +1,7 @@
 package com.alchemedia.collage.data
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import android.app.Activity
 import android.content.Context
 import com.android.billingclient.api.AcknowledgePurchaseParams
@@ -97,7 +99,7 @@ class BillingManager(context: Context, private val settings: SettingsStore) {
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> _message.value = null
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> scope.launch { queryPurchases() }
-            else -> _message.value = "The purchase didn't go through. Please try again."
+            else -> _message.value = Strings.get(R.string.billing_failed)
         }
     }
 
@@ -106,7 +108,7 @@ class BillingManager(context: Context, private val settings: SettingsStore) {
         val d = details
         val offer = d?.subscriptionOfferDetails?.firstOrNull()
         if (d == null || offer == null) {
-            _message.value = "Google Play isn't available right now. Please try again in a moment."
+            _message.value = Strings.get(R.string.billing_unavailable)
             connect()
             return
         }
@@ -117,7 +119,7 @@ class BillingManager(context: Context, private val settings: SettingsStore) {
         val result = client.launchBillingFlow(activity, params)
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
             _busy.value = false
-            _message.value = "The purchase didn't start. Please try again."
+            _message.value = Strings.get(R.string.billing_not_started)
         }
     }
 

@@ -30,6 +30,7 @@ import com.alchemedia.collage.ui.home.NewScreen
 import com.alchemedia.collage.ui.sheets.CardSheet
 import com.alchemedia.collage.ui.sheets.ExportSheet
 import com.alchemedia.collage.ui.sheets.HistoryItemSheet
+import com.alchemedia.collage.ui.sheets.LanguageSheet
 import com.alchemedia.collage.ui.sheets.ProSheet
 import com.alchemedia.collage.ui.theme.CTheme
 
@@ -86,6 +87,7 @@ fun AppRoot(vm: AppViewModel) {
             key(sheet) {
                 when (sheet) {
                     Sheet.Pro -> ProSheet(vm)
+                    Sheet.Language -> LanguageSheet(vm)
                     Sheet.Export -> vm.editor?.let { ExportSheet(vm, it) }
                     is Sheet.Card -> CardSheet(vm, sheet.projectId)
                     is Sheet.HistoryItem -> HistoryItemSheet(vm, sheet.entryId)

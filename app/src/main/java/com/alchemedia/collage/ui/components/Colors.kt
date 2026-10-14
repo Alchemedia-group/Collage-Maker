@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.components
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,7 +51,7 @@ fun CustomSwatch(selected: Boolean, onClick: () -> Unit, modifier: Modifier = Mo
     Box(
         modifier.size(size).then(if (selected) Modifier.border(2.dp, c.accent, CircleShape).padding(3.dp) else Modifier).clip(CircleShape)
             .background(Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)))
-            .pressable(onClick, label = "Custom colour"),
+            .pressable(onClick, label = Strings.get(R.string.custom_colour)),
     )
 }
 
@@ -60,7 +62,7 @@ fun ColorRow(colors: List<Long>, selected: Long?, onPick: (Long?) -> Unit, onCus
     ScrollRow(modifier, state = rememberScrollState(), padding = 16.dp, spacing = 11.dp) {
         Box(Modifier.padding(vertical = 6.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(11.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (allowNone) Swatch(null, selected == null, "None", { onPick(null) })
+                if (allowNone) Swatch(null, selected == null, Strings.get(R.string.none), { onPick(null) })
                 colors.forEach { col -> Swatch(col.toColor(), selected == col, hexOf(col), { onPick(col) }) }
                 CustomSwatch(!isPreset, onCustom)
             }
@@ -106,7 +108,7 @@ fun CustomColorSheet(initial: Long, onPick: (Long) -> Unit, onDismiss: () -> Uni
     fun syncHex() { hex = hexOf(current.toLong()) }
 
     SheetHost(onDismiss) {
-        SheetTitle("Custom colour")
+        SheetTitle(Strings.get(R.string.custom_colour))
         Canvas(
             Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp))
                 .pointerInput(Unit) {
@@ -170,7 +172,7 @@ fun CustomColorSheet(initial: Long, onPick: (Long) -> Unit, onDismiss: () -> Uni
                 )
             }
         }
-        CButton("Use this colour", { onPick(current.toLong()); onDismiss() })
-        CButton("Cancel", onDismiss, style = BtnStyle.Ghost)
+        CButton(Strings.get(R.string.use_this_colour), { onPick(current.toLong()); onDismiss() })
+        CButton(Strings.get(R.string.cancel), onDismiss, style = BtnStyle.Ghost)
     }
 }

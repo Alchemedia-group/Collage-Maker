@@ -1,7 +1,11 @@
 package com.alchemedia.collage.model
 
+import com.alchemedia.collage.Strings
+
 /** A canvas size named after where the picture is going. */
-data class SocialPreset(val id: String, val name: String, val aspect: AspectPreset)
+data class SocialPreset(val id: String, val name: String, val aspect: AspectPreset) {
+    val title: String get() = Strings.named("social_" + id.replace("-", "_"), name)
+}
 
 object SocialPresets {
     val all = listOf(

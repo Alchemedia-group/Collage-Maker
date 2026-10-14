@@ -1,5 +1,6 @@
 package com.alchemedia.collage
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +28,10 @@ class MainActivity : ComponentActivity() {
                 CollageTheme { AppRoot(viewModel) }
             }
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(Strings.wrap(newBase))
     }
 
     override fun onResume() {

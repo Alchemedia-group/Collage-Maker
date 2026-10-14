@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.editor
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -101,13 +103,13 @@ private fun TextHome(ed: EditorState) {
     val c = CTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CButton("Add text", { ed.addItem(CanvasItem.text()); ed.focusRequest++ }, small = true, icon = Icon.Add)
-            CText("or start from a style", size = 12.sp, color = c.muted)
+            CButton(Strings.get(R.string.add_text), { ed.addItem(CanvasItem.text()); ed.focusRequest++ }, small = true, icon = Icon.Add)
+            CText(Strings.get(R.string.or_start_style), size = 12.sp, color = c.muted)
         }
         ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
             TextTemplates.all.forEach { t ->
                 val items = remember(t.name) { t.make() }
-                Canvas(Modifier.size(120.dp, 58.dp).clip(RoundedCornerShape(12.dp)).pressable({ ed.addTemplate(t.make()) }, label = "Add ${t.name}")) {
+                Canvas(Modifier.size(120.dp, 58.dp).clip(RoundedCornerShape(12.dp)).pressable({ ed.addTemplate(t.make()) }, label = Strings.get(R.string.add_item, t.title))) {
                     drawRect(Brush.linearGradient(listOf(Color(0xFF3B4252), Color(0xFF1B2029)), Offset.Zero, Offset(size.width, size.height)))
                     val ys = items.map { it.y }
                     val mid = (ys.min() + ys.max()) / 2f
@@ -176,15 +178,15 @@ private fun TextBox(ed: EditorState, item: CanvasItem) {
     }
     if (!ed.typing) {
         Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            SquareIconBtn(Icon.AlignLeft, "Align left", { ed.itemOp { it.copy(align = "left") } }, pressed = item.align == "left")
-            SquareIconBtn(Icon.AlignCenter, "Align centre", { ed.itemOp { it.copy(align = "center") } }, pressed = item.align == "center")
-            SquareIconBtn(Icon.AlignRight, "Align right", { ed.itemOp { it.copy(align = "right") } }, pressed = item.align == "right")
-            SquareBtn("Bold", { ed.itemOp { it.copy(bold = !it.bold) } }, pressed = item.bold) {
+            SquareIconBtn(Icon.AlignLeft, Strings.get(R.string.align_left), { ed.itemOp { it.copy(align = "left") } }, pressed = item.align == "left")
+            SquareIconBtn(Icon.AlignCenter, Strings.get(R.string.align_centre), { ed.itemOp { it.copy(align = "center") } }, pressed = item.align == "center")
+            SquareIconBtn(Icon.AlignRight, Strings.get(R.string.align_right), { ed.itemOp { it.copy(align = "right") } }, pressed = item.align == "right")
+            SquareBtn(Strings.get(R.string.bold), { ed.itemOp { it.copy(bold = !it.bold) } }, pressed = item.bold) {
                 CText("B", size = 16.sp, weight = 800, color = if (item.bold) c.onAccent else c.ink)
             }
-            SquareIconBtn(Icon.Add, "Add another text", { ed.addItem(CanvasItem.text()); ed.focusRequest++ })
-            SquareIconBtn(Icon.Duplicate, "Duplicate", ed::duplicateItem)
-            SquareIconBtn(Icon.Trash, "Delete", ed::deleteItem, danger = true)
+            SquareIconBtn(Icon.Add, Strings.get(R.string.add_another_text), { ed.addItem(CanvasItem.text()); ed.focusRequest++ })
+            SquareIconBtn(Icon.Duplicate, Strings.get(R.string.duplicate), ed::duplicateItem)
+            SquareIconBtn(Icon.Trash, Strings.get(R.string.delete), ed::deleteItem, danger = true)
         }
     }
 }
@@ -196,14 +198,14 @@ private fun FontPanel(ed: EditorState, item: CanvasItem, favourites: Set<String>
     val c = CTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScrollRow(padding = 14.dp, spacing = 6.dp) {
-            TabChip("Favourites", ed.fontCategory == FontCatalog.FAVOURITES, { ed.fontCategory = FontCatalog.FAVOURITES })
-            FontCatalog.categories.forEach { (id, name) -> TabChip(name, ed.fontCategory == id, { ed.fontCategory = id }) }
+            TabChip(Strings.get(R.string.fontcat_fav), ed.fontCategory == FontCatalog.FAVOURITES, { ed.fontCategory = FontCatalog.FAVOURITES })
+            FontCatalog.categories.forEach { (id, _) -> TabChip(FontCatalog.categoryTitle(id), ed.fontCategory == id, { ed.fontCategory = id }) }
         }
         val fonts = remember(ed.fontCategory, favourites) {
             if (ed.fontCategory == FontCatalog.FAVOURITES) FontCatalog.favourites(favourites) else FontCatalog.inCategory(ed.fontCategory)
         }
         if (fonts.isEmpty()) {
-            CText("Tap the star on a font to keep it here.", Modifier.padding(horizontal = 18.dp, vertical = 8.dp), size = 13.sp, color = c.muted)
+            CText(Strings.get(R.string.tap_star_font), Modifier.padding(horizontal = 18.dp, vertical = 8.dp), size = 13.sp, color = c.muted)
         }
         ScrollRow(padding = 14.dp, spacing = 10.dp, state = rememberScrollState(), tiles = true) {
             fonts.forEach { f ->
@@ -220,7 +222,7 @@ private fun FontPanel(ed: EditorState, item: CanvasItem, favourites: Set<String>
                         CText(f.name, size = 10.sp, weight = 600, color = c.muted, maxLines = 1)
                     }
                     Box(
-                        Modifier.align(Alignment.TopEnd).size(28.dp).pressable({ onToggleFavourite(f.id) }, label = if (starred) "Remove ${f.name} from favourites" else "Add ${f.name} to favourites"),
+                        Modifier.align(Alignment.TopEnd).size(28.dp).pressable({ onToggleFavourite(f.id) }, label = if (starred) Strings.get(R.string.fav_remove, f.name) else Strings.get(R.string.fav_add, f.name)),
                         contentAlignment = Alignment.Center,
                     ) {
                         CIcon(if (starred) Icon.StarFilled else Icon.Star, size = 14.dp, tint = if (starred) c.accent else c.muted, strokeWidth = 2f)
@@ -263,21 +265,21 @@ private fun GradientPicker(ed: EditorState, item: CanvasItem, onCustomColor: (Lo
     val c = CTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScrollRow(padding = 14.dp, spacing = 10.dp, state = rememberScrollState(), tiles = true) {
-            TileWithLabel("Off", item.fill2 == null, { ed.itemOp { it.copy(fill2 = null) } }) {
+            TileWithLabel(Strings.get(R.string.off), item.fill2 == null, { ed.itemOp { it.copy(fill2 = null) } }) {
                 Box(Modifier.fillMaxSize().background(DARK_TILE), contentAlignment = Alignment.Center) { CText("Aa", size = 18.sp, weight = 800, color = Color.White) }
             }
             TextGradients.all.forEach { g ->
-                TileWithLabel(g.name, item.fill2 == g.to && item.fill == g.from, { ed.itemOp { g.on(it) } }) {
+                TileWithLabel(g.title, item.fill2 == g.to && item.fill == g.from, { ed.itemOp { g.on(it) } }) {
                     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(g.from.toInt()), Color(g.to.toInt())), Offset.Zero, Offset(120f, 120f))))
                 }
             }
         }
         val end = item.fill2
         if (end != null) {
-            CText("END COLOUR", Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+            CText(Strings.get(R.string.label_end_colour), Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
             ColorRow(TextColors.palette, end, { col -> if (col != null) ed.itemOp { it.copy(fill2 = col) } }, onCustom = { onCustomColor(end) { col -> ed.itemOp { it.copy(fill2 = col) } } })
             Box(Modifier.padding(horizontal = 14.dp)) {
-                SliderOne(ItemSlider.Gradient.get(item), ItemSlider.Gradient.min..ItemSlider.Gradient.max, ItemSlider.Gradient::format, { v -> ed.itemOp { ItemSlider.Gradient.set(it, v) } }, step = 1f, label = "Gradient angle")
+                SliderOne(ItemSlider.Gradient.get(item), ItemSlider.Gradient.min..ItemSlider.Gradient.max, ItemSlider.Gradient::format, { v -> ed.itemOp { ItemSlider.Gradient.set(it, v) } }, step = 1f, label = Strings.get(R.string.gradient_angle))
             }
         }
     }
@@ -292,7 +294,7 @@ private fun StylePanelText(ed: EditorState, item: CanvasItem) {
                 val demo = remember(item.font, item.bold, preset.id) {
                     preset.apply.invoke(CanvasItem.text("Aa", font = item.font, size = .5f, fill = 0xFFFFFFFF).copy(bold = item.bold, x = .5f, y = .5f))
                 }
-                Canvas(Modifier.size(70.dp, 48.dp).clip(RoundedCornerShape(12.dp)).background(DARK_TILE).pressable({ ed.itemOp { preset.apply.invoke(it) } }, label = preset.name)) {
+                Canvas(Modifier.size(70.dp, 48.dp).clip(RoundedCornerShape(12.dp)).background(DARK_TILE).pressable({ ed.itemOp { preset.apply.invoke(it) } }, label = preset.title)) {
                     drawIntoCanvas { ItemRenderer.draw(it.nativeCanvas, demo, size.width, size.height) }
                 }
             }
@@ -313,8 +315,8 @@ fun SliderTargets(selected: ItemSlider, options: List<ItemSlider>, onSelect: (It
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ScrollRow(Modifier.weight(1f), padding = 0.dp, spacing = 6.dp) { options.forEach { o -> TabChip(o.label, selected == o, { onSelect(o) }) } }
             if (withOrder) {
-                SquareIconBtn(Icon.ToFront, "Bring to front", { ed.reorderItem(true) })
-                SquareIconBtn(Icon.ToBack, "Send back", { ed.reorderItem(false) })
+                SquareIconBtn(Icon.ToFront, Strings.get(R.string.bring_front), { ed.reorderItem(true) })
+                SquareIconBtn(Icon.ToBack, Strings.get(R.string.send_back), { ed.reorderItem(false) })
             }
         }
         SliderOne(selected.get(item), selected.min..selected.max, selected::format, { v -> ed.itemOp { selected.set(it, v) } }, step = selected.step, label = selected.label)
@@ -331,11 +333,11 @@ fun StickerPanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit)
         if (item != null) {
             SliderTargets(ed.stickerSlider, listOf(ItemSlider.Size, ItemSlider.Rotate, ItemSlider.Opacity), { ed.stickerSlider = it }, ed, item)
             Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                SquareIconBtn(Icon.Flip, "Flip", { ed.itemOp { it.copy(flip = !it.flip) } }, pressed = item.flip)
-                SquareIconBtn(Icon.ToFront, "Bring to front", { ed.reorderItem(true) })
-                SquareIconBtn(Icon.ToBack, "Send back", { ed.reorderItem(false) })
-                SquareIconBtn(Icon.Duplicate, "Duplicate", ed::duplicateItem)
-                SquareIconBtn(Icon.Trash, "Delete", ed::deleteItem, danger = true)
+                SquareIconBtn(Icon.Flip, Strings.get(R.string.flip), { ed.itemOp { it.copy(flip = !it.flip) } }, pressed = item.flip)
+                SquareIconBtn(Icon.ToFront, Strings.get(R.string.bring_front), { ed.reorderItem(true) })
+                SquareIconBtn(Icon.ToBack, Strings.get(R.string.send_back), { ed.reorderItem(false) })
+                SquareIconBtn(Icon.Duplicate, Strings.get(R.string.duplicate), ed::duplicateItem)
+                SquareIconBtn(Icon.Trash, Strings.get(R.string.delete), ed::deleteItem, danger = true)
                 Box(Modifier.weight(1f))
                 DoneBtn(ed::doneEditing)
             }
@@ -345,7 +347,7 @@ fun StickerPanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit)
         } else {
             ScrollRow(padding = 14.dp, spacing = 6.dp) {
                 EmojiCatalog.categories.forEach { cat -> TabChip(cat.title, ed.emojiCategory == cat.id, { ed.emojiCategory = cat.id }) }
-                TabChip("Shapes", ed.emojiCategory == "shapes", { ed.emojiCategory = "shapes" })
+                TabChip(Strings.get(R.string.emoji_shapes), ed.emojiCategory == "shapes", { ed.emojiCategory = "shapes" })
             }
         }
         if (ed.emojiCategory == "shapes") {
@@ -367,14 +369,14 @@ fun StickerPanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit)
 
 @Composable
 private fun EmojiCell(emoji: String, modifier: Modifier, onClick: () -> Unit) {
-    Box(modifier.height(42.dp).clip(RoundedCornerShape(10.dp)).pressable(onClick, label = "Add $emoji"), contentAlignment = Alignment.Center) {
+    Box(modifier.height(42.dp).clip(RoundedCornerShape(10.dp)).pressable(onClick, label = Strings.get(R.string.add_item, emoji)), contentAlignment = Alignment.Center) {
         Text(emoji, fontSize = 26.sp, textAlign = TextAlign.Center)
     }
 }
 
 @Composable
 private fun ShapeCell(shape: String, onClick: () -> Unit) {
-    Box(Modifier.size(44.dp, 42.dp).clip(RoundedCornerShape(10.dp)).pressable(onClick, label = "$shape sticker"), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(44.dp, 42.dp).clip(RoundedCornerShape(10.dp)).pressable(onClick, label = Strings.get(R.string.sticker_desc, Strings.named("shape_$shape", shape))), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(26.dp)) {
             drawIntoCanvas { canvas ->
                 val nc = canvas.nativeCanvas

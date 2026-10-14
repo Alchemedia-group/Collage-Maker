@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.home
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -90,9 +92,9 @@ fun NewScreen(vm: AppViewModel) {
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding()) {
         AppBar(onBack = { vm.back() }) {
-            BarTitle("Choose photos", Modifier.weight(1f))
+            BarTitle(Strings.get(R.string.choose_photos), Modifier.weight(1f))
             CountBadge("$n/$MAX_PHOTOS")
-            IconBtn(Icon.Photo, "Add photos from this device", launchPicker)
+            IconBtn(Icon.Photo, Strings.get(R.string.add_photos_device), launchPicker)
         }
         LazyVerticalGrid(
             GridCells.Fixed(3), Modifier.weight(1f).fillMaxWidth(),
@@ -101,13 +103,13 @@ fun NewScreen(vm: AppViewModel) {
         ) {
             item(key = "add") { AddTile(launchPicker) }
             if (device.isNotEmpty()) {
-                item(key = "yours", span = { GridItemSpan(maxLineSpan) }) { Label("YOUR PHOTOS") }
+                item(key = "yours", span = { GridItemSpan(maxLineSpan) }) { Label(Strings.get(R.string.label_your_photos)) }
                 items(device, key = { it.id }) { Thumb(vm, it) }
-                item(key = "samples", span = { GridItemSpan(maxLineSpan) }) { Label("SAMPLE PHOTOS") }
+                item(key = "samples", span = { GridItemSpan(maxLineSpan) }) { Label(Strings.get(R.string.label_sample_photos)) }
             }
             items(samples, key = { it.id }) { Thumb(vm, it) }
         }
-        Tray(vm, layout.name, n, launchPicker)
+        Tray(vm, layout.title, n, launchPicker)
     }
 }
 
@@ -118,12 +120,12 @@ private fun Label(text: String) = CText(text, Modifier.padding(top = 4.dp), size
 private fun AddTile(onClick: () -> Unit) {
     val c = CTheme.colors
     Column(
-        Modifier.aspectRatio(1f).clip(RoundedCornerShape(16.dp)).background(c.card).pressable(onClick, label = "Add photos from this device")
+        Modifier.aspectRatio(1f).clip(RoundedCornerShape(16.dp)).background(c.card).pressable(onClick, label = Strings.get(R.string.add_photos_device))
             .drawDash(c.line),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
     ) {
         CIcon(Icon.Photo, size = 28.dp, tint = c.accent)
-        CText("Add photos", Modifier.padding(top = 6.dp), size = 12.sp, weight = 700, color = c.accent)
+        CText(Strings.get(R.string.add_photos), Modifier.padding(top = 6.dp), size = 12.sp, weight = 700, color = c.accent)
     }
 }
 
@@ -138,7 +140,7 @@ private fun Thumb(vm: AppViewModel, item: PickItem) {
     val index = vm.selection.indexOf(item.id)
     val on = index >= 0
     Box(
-        Modifier.aspectRatio(1f).pressable({ vm.togglePick(item.id) }, role = Role.Checkbox, label = "Photo")
+        Modifier.aspectRatio(1f).pressable({ vm.togglePick(item.id) }, role = Role.Checkbox, label = Strings.get(R.string.tab_photo))
             .semantics { selected = on },
     ) {
         val ring = if (on) Modifier.border(3.dp, c.accent, RoundedCornerShape(16.dp)).padding(3.dp) else Modifier
@@ -175,10 +177,10 @@ private fun Tray(vm: AppViewModel, layoutName: String, n: Int, onAdd: () -> Unit
                 PickPreview(vm, Modifier.size(66.dp))
             }
             Column(Modifier.weight(1f)) {
-                CText(if (n > 0) layout.name else "Pick a photo", size = 17.sp, weight = 700, display = true, maxLines = 1)
+                CText(if (n > 0) layout.title else Strings.get(R.string.pick_a_photo), size = 17.sp, weight = 700, display = true, maxLines = 1)
                 CText(
-                    if (n > 0) "${layout.cells.size} cells" + if (left > 0) ", $left photo${if (left == 1) "" else "s"} left over" else ""
-                    else "A layout is suggested as you pick.",
+                    if (n > 0) Strings.plural(R.plurals.p_cells, layout.cells.size).let { cells -> if (left > 0) Strings.get(R.string.new_summary_left, cells, Strings.plural(R.plurals.p_photos_left, left)) else cells }
+                    else Strings.get(R.string.layout_suggested),
                     size = 12.sp, color = c.muted,
                 )
             }
@@ -188,7 +190,7 @@ private fun Tray(vm: AppViewModel, layoutName: String, n: Int, onAdd: () -> Unit
             onPick = { vm.pickLayoutForNew(it) }, onBrowse = { vm.openBrowse(BrowseTarget.New) }, onDesign = { vm.openDesigner(BrowseTarget.New) },
             mineVersion = vm.mineVersion,
         )
-        CButton(if (n > 0) "Create collage ($n)" else "Create collage", { vm.createCollage() }, Modifier.padding(horizontal = 12.dp), enabled = n > 0 && !vm.creating)
+        CButton(if (n > 0) Strings.get(R.string.create_collage_n, n) else Strings.get(R.string.create_collage), { vm.createCollage() }, Modifier.padding(horizontal = 12.dp), enabled = n > 0 && !vm.creating)
     }
 }
 

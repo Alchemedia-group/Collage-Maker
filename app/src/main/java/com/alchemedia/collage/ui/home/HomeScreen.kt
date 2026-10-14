@@ -1,5 +1,6 @@
 package com.alchemedia.collage.ui.home
 
+import com.alchemedia.collage.Strings
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -97,27 +98,28 @@ fun HomeScreen(vm: AppViewModel) {
                 CText("Photo Collage", size = 25.sp, weight = 800, display = true, letterSpacing = (-.75).sp, maxLines = 1)
             }
             if (pro) ProTag(Modifier.padding(end = 4.dp))
-            IconBtn(Icon.History, "History", { vm.openHistory() })
-            if (!pro) Pill("Go Pro", { vm.openSheet(Sheet.Pro) }, ink = true)
+            IconBtn(Icon.Globe, Strings.get(R.string.language), { vm.openSheet(Sheet.Language) })
+            IconBtn(Icon.History, Strings.get(R.string.history), { vm.openHistory() })
+            if (!pro) Pill(Strings.get(R.string.go_pro), { vm.openSheet(Sheet.Pro) }, ink = true)
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)) {
             item { Hero(onNew = { vm.startNew() }, onDesign = { vm.openDesigner(BrowseTarget.Home) }) }
             item {
-                SectionHeader("Quick layouts") {
-                    LinkBtn("See all ($total)", { vm.openBrowse(BrowseTarget.Home) }, vertical = 0.dp)
+                SectionHeader(Strings.get(R.string.quick_layouts)) {
+                    LinkBtn(Strings.get(R.string.see_all, total), { vm.openBrowse(BrowseTarget.Home) }, vertical = 0.dp)
                 }
             }
             item { QuickRow(vm) }
             item {
-                SectionHeader("Pinned") {
-                    if (projects.isNotEmpty()) CText("${projects.size} collage${if (projects.size == 1) "" else "s"}", size = 12.sp, color = c.muted)
+                SectionHeader(Strings.get(R.string.pinned)) {
+                    if (projects.isNotEmpty()) CText(Strings.plural(R.plurals.p_collages, projects.size), size = 12.sp, color = c.muted)
                 }
             }
             if (projects.isEmpty() && loaded) {
                 item {
                     Column(Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CText("Nothing pinned yet", size = 22.sp, weight = 700, display = true)
-                        CText("Start a collage and it will show up here.", Modifier.padding(top = 6.dp), size = 14.sp, color = c.muted)
+                        CText(Strings.get(R.string.nothing_pinned), size = 22.sp, weight = 700, display = true)
+                        CText(Strings.get(R.string.start_and_show), Modifier.padding(top = 6.dp), size = 14.sp, color = c.muted)
                     }
                 }
             } else if (projects.isNotEmpty()) {
@@ -173,8 +175,8 @@ private fun Hero(onNew: () -> Unit, onDesign: () -> Unit) {
         HeroArt(Modifier.align(Alignment.CenterEnd).width(166.dp).fillMaxSize())
         Column(Modifier.fillMaxSize().padding(start = 20.dp, top = 18.dp, bottom = 22.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
-                CText("Start a collage", Modifier.width(124.dp), size = 29.sp, weight = 800, display = true, color = Color.White, letterSpacing = (-1).sp, lineHeight = 28.4.sp)
-                CText("Pick your photos and get a layout suggested.", Modifier.width(118.dp).padding(top = 5.dp).alpha(.85f), size = 13.sp, color = Color.White, lineHeight = 18.2.sp)
+                CText(Strings.get(R.string.start_a_collage), Modifier.width(124.dp), size = 29.sp, weight = 800, display = true, color = Color.White, letterSpacing = (-1).sp, lineHeight = 28.4.sp)
+                CText(Strings.get(R.string.hero_sub), Modifier.width(118.dp).padding(top = 5.dp).alpha(.85f), size = 13.sp, color = Color.White, lineHeight = 18.2.sp)
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 GoButton(onNew)
@@ -196,11 +198,11 @@ private fun GoButton(onClick: () -> Unit) {
                 val x = size.width * sweep
                 drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x382557D6), Color.Transparent), startX = x - size.width * .3f, endX = x + size.width * .3f))
             }
-            .pressable(onClick, label = "New collage").padding(start = 14.dp, end = 18.dp),
+            .pressable(onClick, label = Strings.get(R.string.new_collage)).padding(start = 14.dp, end = 18.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CIcon(Icon.Add, size = 22.dp, tint = c.hero, strokeWidth = 2.6f)
-        CText("New collage", size = 14.sp, weight = 800, color = c.hero, maxLines = 1)
+        CText(Strings.get(R.string.new_collage), size = 14.sp, weight = 800, color = c.hero, maxLines = 1)
     }
 }
 
@@ -210,11 +212,11 @@ private fun DesignButton(onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
     Row(
         Modifier.height(40.dp).clip(shape).background(Color(0x29FFFFFF)).border(1.dp, Color(0x59FFFFFF), shape)
-            .pressable(onClick, label = "Design your own layout").padding(start = 11.dp, end = 14.dp),
+            .pressable(onClick, label = Strings.get(R.string.design_own_layout)).padding(start = 11.dp, end = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CIcon(Icon.Pencil, size = 18.dp, tint = Color.White, strokeWidth = 2.2f)
-        CText("Design your own layout", size = 12.5.sp, weight = 700, color = Color.White, maxLines = 1)
+        CText(Strings.get(R.string.design_own_layout), size = 12.5.sp, weight = 700, color = Color.White, maxLines = 1)
     }
 }
 
@@ -288,11 +290,11 @@ private fun QuickRow(vm: AppViewModel) {
         items(LayoutCatalog.quickIds.mapNotNull { LayoutCatalog.find(it) }, key = { it.id }) { layout ->
             val draft = remember(layout.id) { Samples.draft(layout, offset = LayoutCatalog.quickIds.indexOf(layout.id)) }
             val photos = rememberPhotos(draft, 260)
-            Column(Modifier.width(92.dp).pressable({ vm.startNew(layout.id, samples = true) }, label = layout.name), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.width(92.dp).pressable({ vm.startNew(layout.id, samples = true) }, label = layout.title), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Box(Modifier.size(92.dp).shadow(6.dp, RoundedCornerShape(14.dp), spotColor = Color(0x38101828)).clip(RoundedCornerShape(14.dp)).background(Color.White)) {
                     CollagePreview(draft, photos, Modifier.fillMaxSize(), fixedRatio = false)
                 }
-                CText(layout.name, size = 12.sp, weight = 600, maxLines = 1, lineHeight = 15.sp)
+                CText(layout.title, size = 12.sp, weight = 600, maxLines = 1, lineHeight = 15.sp)
             }
         }
     }
@@ -305,11 +307,11 @@ private fun formatDay(millis: Long): String =
 private fun ProjectCard(project: CollageProject, modifier: Modifier, onOpen: () -> Unit, onMenu: () -> Unit) {
     val c = CTheme.colors
     val photos = rememberPhotos(project, 420)
-    val name = project.name.ifBlank { "Untitled collage" }
+    val name = project.name.ifBlank { Strings.get(R.string.untitled) }
     Box(modifier) {
         Column(
             Modifier.fillMaxWidth().shadow(8.dp, RoundedCornerShape(18.dp), spotColor = Color(0x1A101828)).clip(RoundedCornerShape(18.dp)).background(c.card)
-                .pressable(onOpen, role = Role.Button, label = "Open $name").padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 12.dp),
+                .pressable(onOpen, role = Role.Button, label = Strings.get(R.string.open_item, name)).padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
             Box(
@@ -325,7 +327,7 @@ private fun ProjectCard(project: CollageProject, modifier: Modifier, onOpen: () 
         }
         Box(
             Modifier.align(Alignment.TopEnd).padding(top = 14.dp, end = 14.dp).size(34.dp).shadow(4.dp, CircleShape).clip(CircleShape).background(c.card.copy(alpha = .92f))
-                .pressable(onMenu, label = "More options for $name"),
+                .pressable(onMenu, label = Strings.get(R.string.more_options, name)),
             contentAlignment = Alignment.Center,
         ) { CIcon(Icon.More, size = 18.dp) }
     }

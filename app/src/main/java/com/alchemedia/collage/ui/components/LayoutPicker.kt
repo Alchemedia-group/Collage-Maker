@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.components
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,7 +50,7 @@ import com.alchemedia.collage.ui.theme.CTheme
 fun LayoutTile(layout: Layout, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 56.dp, labelSize: Int = 11) {
     val c = CTheme.colors
     Column(
-        modifier.width(size + 6.dp).pressable(onClick, role = Role.RadioButton, label = "${layout.name}, ${layout.cells.size} photos")
+        modifier.width(size + 6.dp).pressable(onClick, role = Role.RadioButton, label = Strings.get(R.string.layout_photos_desc, layout.title, Strings.plural(R.plurals.p_photos, layout.cells.size)))
             .semantics { this.selected = selected },
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
@@ -57,7 +59,7 @@ fun LayoutTile(layout: Layout, selected: Boolean, onClick: () -> Unit, modifier:
         ) {
             LayoutIcon(layout, if (selected) c.onAccent else lerpColor(c.card, c.ink, .52f), Modifier.size(size - 12.dp))
         }
-        CText(layout.name, size = labelSize.sp, weight = 600, color = if (selected) c.ink else c.muted, maxLines = 1, align = TextAlign.Center)
+        CText(layout.title, size = labelSize.sp, weight = 600, color = if (selected) c.ink else c.muted, maxLines = 1, align = TextAlign.Center)
     }
 }
 
@@ -65,14 +67,14 @@ fun LayoutTile(layout: Layout, selected: Boolean, onClick: () -> Unit, modifier:
 @Composable
 fun DesignTile(onClick: () -> Unit, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 56.dp) {
     val c = CTheme.colors
-    Column(modifier.width(size + 6.dp).pressable(onClick, label = "Design a new layout"), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+    Column(modifier.width(size + 6.dp).pressable(onClick, label = Strings.get(R.string.design_new_layout)), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Box(
             Modifier.size(size).clip(RoundedCornerShape(14.dp)).drawBehind {
                 drawRoundRect(c.line, Offset(1f, 1f), Size(this.size.width - 2f, this.size.height - 2f), CornerRadius(14.dp.toPx()), style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f))))
             },
             contentAlignment = Alignment.Center,
         ) { CIcon(Icon.Add, size = 26.dp, tint = c.accent, strokeWidth = 2.4f) }
-        CText("Design", size = 11.sp, weight = 600, color = c.muted)
+        CText(Strings.get(R.string.design), size = 11.sp, weight = 600, color = c.muted)
     }
 }
 
@@ -107,20 +109,20 @@ fun LayoutPicker(
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LazyRow(Modifier.weight(1f).edgeFade(chips), state = chips, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(LayoutCategories.all, key = { it.first }) { (id, name) -> TabChip(name, id == category, { onCategory(id) }) }
+                items(LayoutCategories.all, key = { it.first }) { (id, _) -> TabChip(LayoutCategories.label(id), id == category, { onCategory(id) }) }
             }
             Row(
-                Modifier.height(34.dp).clip(CircleShape).background(c.tint).pressable(onBrowse, label = "Browse all layouts").padding(start = 11.dp, end = 13.dp),
+                Modifier.height(34.dp).clip(CircleShape).background(c.tint).pressable(onBrowse, label = Strings.get(R.string.browse_all)).padding(start = 11.dp, end = 13.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 CIcon(Icon.AllLayouts, size = 16.dp, tint = c.onTint)
-                CText("All", size = 13.sp, weight = 800, color = c.onTint)
+                CText(Strings.get(R.string.all), size = 13.sp, weight = 800, color = c.onTint)
             }
         }
         LazyRow(Modifier.fillMaxWidth().edgeFade(tiles), state = tiles, contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // "Design" leads every row, so drawing your own layout is never more than a swipe away.
             item(key = "design") { DesignTile(onDesign) }
-            if (layouts.isEmpty() && category != "mine") item(key = "none") { CText("Nothing here yet.", Modifier.padding(vertical = 14.dp), size = 13.sp, color = c.muted) }
+            if (layouts.isEmpty() && category != "mine") item(key = "none") { CText(Strings.get(R.string.nothing_here), Modifier.padding(vertical = 14.dp), size = 13.sp, color = c.muted) }
             items(layouts, key = { it.id }) { l -> LayoutTile(l, l.id == selectedId, { onPick(l.id) }) }
         }
     }

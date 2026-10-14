@@ -1,5 +1,7 @@
 package com.alchemedia.collage.model
 
+import com.alchemedia.collage.Strings
+
 /** A bundled font. Variable fonts get their weight from [weight]; static files are used as they are. */
 data class FontDef(
     val id: String,
@@ -77,6 +79,9 @@ object FontCatalog {
 
     /** Id of the pseudo-category that lists the user's starred fonts. */
     const val FAVOURITES = "fav"
+
+    /** A font category's name in the current language. */
+    fun categoryTitle(id: String): String = Strings.named("fontcat_$id", categories.firstOrNull { it.first == id }?.second ?: id)
 
     fun inCategory(category: String): List<FontDef> = all.filter { category in it.categories }
 

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings looked up by name at runtime (Strings.named) must survive resource shrinking in release builds. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/layout_*,@string/filter_*,@string/texture_*,@string/frame_*,@string/emoji_*,@string/fontcat_*,@string/preset_*,@string/grad_*,@string/tpl_*,@string/social_*,@string/shape_*,@string/lc_*,@string/default_text" />

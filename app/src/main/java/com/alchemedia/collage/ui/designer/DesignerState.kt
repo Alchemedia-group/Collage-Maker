@@ -1,5 +1,8 @@
 package com.alchemedia.collage.ui.designer
 
+import androidx.annotation.StringRes
+import com.alchemedia.collage.R
+import com.alchemedia.collage.Strings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -14,8 +17,17 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
-enum class DesignerTab(val label: String) { Cells("Cells"), Shape("Shape"), Canvas("Canvas") }
-enum class ShapeAdjust(val label: String) { Size("Size"), Rotate("Rotate") }
+enum class DesignerTab(@StringRes val labelRes: Int) {
+    Cells(R.string.dz_tab_cells), Shape(R.string.tab_shape), Canvas(R.string.dz_tab_canvas);
+
+    val label: String get() = Strings.get(labelRes)
+}
+
+enum class ShapeAdjust(@StringRes val labelRes: Int) {
+    Size(R.string.sub_size), Rotate(R.string.sub_rotate);
+
+    val label: String get() = Strings.get(labelRes)
+}
 
 /** A dashed guide line shown while a cell snaps (axis 'x' is a vertical line). */
 data class Guide(val axis: Char, val v: Float)
@@ -116,9 +128,9 @@ class DesignerState(base: Layout?, val editId: String?) {
     // ------------------------------------------------------------ cell operations (return a message when they cannot be done)
 
     fun split(vertical: Boolean): String? {
-        val c = selectedCell ?: return "Tap a cell first."
+        val c = selectedCell ?: return Strings.get(R.string.dz_err_tap_cell)
         val half = (if (vertical) c.w else c.h) / 2f
-        if (half < MIN_CELL) return "That cell is too small to split."
+        if (half < MIN_CELL) return Strings.get(R.string.dz_err_too_small)
         push()
         val a = if (vertical) c.copy(w = half) else c.copy(h = half)
         val b = if (vertical) c.copy(x = c.x + half, w = half) else c.copy(y = c.y + half, h = half)
@@ -127,8 +139,8 @@ class DesignerState(base: Layout?, val editId: String?) {
     }
 
     fun duplicate(): String? {
-        val c = selectedCell ?: return "Tap a cell first."
-        if (cells.size >= 40) return "A layout can have up to 40 cells."
+        val c = selectedCell ?: return Strings.get(R.string.dz_err_tap_cell)
+        if (cells.size >= 40) return Strings.get(R.string.dz_err_max_cells)
         push()
         cells = cells + c.copy(x = clampPos(c.x + .03f, c.w), y = clampPos(c.y + .03f, c.h))
         selected = cells.lastIndex
@@ -136,8 +148,8 @@ class DesignerState(base: Layout?, val editId: String?) {
     }
 
     fun delete(): String? {
-        if (selectedCell == null) return "Tap a cell first."
-        if (cells.size <= 1) return "A layout needs at least one cell."
+        if (selectedCell == null) return Strings.get(R.string.dz_err_tap_cell)
+        if (cells.size <= 1) return Strings.get(R.string.dz_err_min_cell)
         push()
         cells = cells.toMutableList().also { it.removeAt(selected) }
         selected = min(selected, cells.lastIndex)
@@ -145,7 +157,7 @@ class DesignerState(base: Layout?, val editId: String?) {
     }
 
     fun toFront(): String? {
-        val c = selectedCell ?: return "Tap a cell first."
+        val c = selectedCell ?: return Strings.get(R.string.dz_err_tap_cell)
         push()
         cells = cells.toMutableList().also { it.removeAt(selected); it.add(c) }
         selected = cells.lastIndex
@@ -153,7 +165,7 @@ class DesignerState(base: Layout?, val editId: String?) {
     }
 
     fun toBack(): String? {
-        val c = selectedCell ?: return "Tap a cell first."
+        val c = selectedCell ?: return Strings.get(R.string.dz_err_tap_cell)
         push()
         cells = cells.toMutableList().also { it.removeAt(selected); it.add(0, c) }
         selected = 0
@@ -166,7 +178,7 @@ class DesignerState(base: Layout?, val editId: String?) {
     }
 
     fun setShape(key: String): String? {
-        if (selectedCell == null) return "Tap a cell first."
+        if (selectedCell == null) return Strings.get(R.string.dz_err_tap_cell)
         push()
         replaceSelected { c ->
             val plain = c.copy(shape = null, text = null, fill = false, rot = null, sc = null)
@@ -376,8 +388,8 @@ class DesignerState(base: Layout?, val editId: String?) {
     private fun r4(v: Float) = Math.round(v * 10000f) / 10000f
 
     /** The layout to save, with a generated name when the user left it blank. */
-    fun toLayout(existingCount: Int): Layout {
-        val label = name.trim().ifEmpty { "My layout ${existingCount + (if (editId != null) 0 else 1)}" }
+    fun toLayout(existingCount: Int, defaultName: (Int) -> String = { "My layout $it" }): Layout {
+        val label = name.trim().ifEmpty { defaultName(existingCount + (if (editId != null) 0 else 1)) }
         val id = editId ?: ("my-" + java.lang.Long.toString(System.currentTimeMillis(), 36))
         val out = cells.map { c ->
             c.copy(x = r4(c.x), y = r4(c.y), w = r4(c.w), h = r4(c.h), shape = c.shape?.takeIf { it.isNotEmpty() }, text = c.text?.takeIf { it.isNotEmpty() })

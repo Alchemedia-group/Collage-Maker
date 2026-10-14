@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.components
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -170,7 +172,7 @@ fun Pill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon:
 fun ProTag(modifier: Modifier = Modifier) {
     val c = CTheme.colors
     Box(modifier.clip(CircleShape).background(c.pro).padding(horizontal = 9.dp, vertical = 4.dp)) {
-        CText("PRO", size = 11.sp, weight = 800, color = c.onPro, letterSpacing = .9.sp)
+        CText(Strings.get(R.string.pro_tag), size = 11.sp, weight = 800, color = c.onPro, letterSpacing = .9.sp)
     }
 }
 
@@ -273,7 +275,7 @@ fun SquareIconBtn(icon: Icon, label: String, onClick: () -> Unit, modifier: Modi
 }
 
 @Composable
-fun DoneBtn(onClick: () -> Unit, modifier: Modifier = Modifier, text: String = "Done") {
+fun DoneBtn(onClick: () -> Unit, modifier: Modifier = Modifier, text: String = Strings.get(R.string.done)) {
     val c = CTheme.colors
     Box(
         modifier.height(30.dp).clip(CircleShape).background(c.accent).pressable(onClick).padding(horizontal = 14.dp),

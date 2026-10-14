@@ -1,5 +1,6 @@
 package com.alchemedia.collage.render
 
+import com.alchemedia.collage.Strings
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -20,7 +21,9 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /** [base] is the background colour that suits the texture (null keeps whatever colour is already chosen). */
-data class TextureDef(val id: String, val name: String, val base: Long? = null)
+data class TextureDef(val id: String, val name: String, val base: Long? = null) {
+    val title: String get() = Strings.named("texture_$id", name)
+}
 
 /** Seeded random numbers (mulberry32), so a texture looks the same every time and at every size. */
 internal class Mulberry(seed: Int) {

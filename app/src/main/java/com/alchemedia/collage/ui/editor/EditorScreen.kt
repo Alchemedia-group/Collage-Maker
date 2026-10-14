@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.editor
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,15 +91,15 @@ fun EditorScreen(vm: AppViewModel, ed: EditorState) {
                 AppBar(height = 52.dp, onBack = { vm.back() }) {
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).padding(horizontal = 4.dp, vertical = 6.dp)) {
                         CTextField(
-                            ed.project.name, ed::rename, Modifier.fillMaxWidth(), "Untitled collage",
+                            ed.project.name, ed::rename, Modifier.fillMaxWidth(), Strings.get(R.string.untitled),
                             textStyle = TextStyle(fontFamily = CTheme.fonts.display(22f), fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = (-.4).sp),
                             placeholderColor = c.ink.copy(alpha = .9f), maxLength = 40, onDone = { focus.clearFocus() },
                         )
                     }
                     if (pro) ProTag()
-                    Pill("Save", {
+                    Pill(Strings.get(R.string.save), {
                         focus.clearFocus()
-                        if (!ed.hasPhotos) vm.showToast("Add a photo first.")
+                        if (!ed.hasPhotos) vm.showToast(Strings.get(R.string.editor_save_needs_photo))
                         else { ed.selectedItemId = null; ed.selectedCell = -1; vm.openSheet(Sheet.Export) }
                     }, icon = Icon.Save)
                 }

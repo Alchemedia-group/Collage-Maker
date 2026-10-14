@@ -1,5 +1,7 @@
 package com.alchemedia.collage.data
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -103,10 +105,10 @@ class CollageStore(context: Context) {
     }
 
     /** A copy with its own id and its own copy of the photos. */
-    suspend fun duplicate(source: CollageProject, nameSuffix: String? = " copy"): CollageProject = withContext(Dispatchers.IO) {
+    suspend fun duplicate(source: CollageProject, nameSuffix: String? = Strings.get(R.string.copy_suffix)): CollageProject = withContext(Dispatchers.IO) {
         val copy = source.normalized().copy(
             id = CollageProject.newId(),
-            name = if (nameSuffix != null) (source.name.ifBlank { "Untitled collage" }) + nameSuffix else source.name,
+            name = if (nameSuffix != null) (source.name.ifBlank { Strings.get(R.string.untitled) }) + nameSuffix else source.name,
             createdAt = System.currentTimeMillis(),
         )
         File(photosDir, source.id).takeIf { it.exists() }?.copyRecursively(File(photosDir, copy.id), overwrite = true)
@@ -226,7 +228,7 @@ class CollageStore(context: Context) {
             val shape = c.shape?.takeIf { LayoutCatalog.shapes.containsKey(it) }
             c.copy(x = c.x.coerceIn(-1f, 2f), y = c.y.coerceIn(-1f, 2f), w = c.w.coerceAtMost(3f), h = c.h.coerceAtMost(3f), shape = shape, text = c.text?.take(2)?.takeIf { it.isNotEmpty() })
         }
-        return layout.copy(name = layout.name.ifBlank { "My layout" }.take(40), cat = "mine", mine = true, cells = cells)
+        return layout.copy(name = layout.name.ifBlank { Strings.get(R.string.my_layout) }.take(40), cat = "mine", mine = true, cells = cells)
     }
 
     /** Photo folders nobody refers to any more (deleted collages that are not in History). */

@@ -22,6 +22,16 @@ class SettingsStore(context: Context) {
         _favouriteFonts.value = next
     }
 
+    private val _language = MutableStateFlow(prefs.getString(KEY_LANGUAGE, "").orEmpty())
+
+    /** The language picked in the app, as a tag such as "es", or "" to follow the phone. */
+    val language: StateFlow<String> = _language.asStateFlow()
+
+    fun setLanguage(tag: String) {
+        prefs.edit().putString(KEY_LANGUAGE, tag).apply()
+        _language.value = tag
+    }
+
     fun setPro(value: Boolean) {
         prefs.edit().putBoolean(KEY_PRO, value).apply()
         _pro.value = value
@@ -30,5 +40,6 @@ class SettingsStore(context: Context) {
     private companion object {
         const val KEY_PRO = "pro"
         const val KEY_FAVOURITE_FONTS = "favourite_fonts"
+        const val KEY_LANGUAGE = "language"
     }
 }

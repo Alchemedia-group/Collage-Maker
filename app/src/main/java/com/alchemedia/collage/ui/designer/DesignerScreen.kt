@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.designer
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -93,13 +95,13 @@ fun DesignerScreen(vm: AppViewModel, state: DesignerState, target: BrowseTarget)
         vm.designerBase = null
         val l = LayoutCatalog.byId(id)
         state.load(l)
-        vm.showToast("Started from “${l.name}”. Change anything you like.")
+        vm.showToast(Strings.get(R.string.dz_started_from, l.title))
     }
     LaunchedEffect(state.armDelete) { if (state.armDelete) { delay(3000); state.armDelete = false } }
 
     fun save() {
         focus.clearFocus()
-        val layout = state.toLayout(vm.store.myLayouts.value.size)
+        val layout = state.toLayout(vm.store.myLayouts.value.size) { Strings.get(R.string.my_layout_n, it) }
         vm.saveLayout(layout) {
             vm.category = "mine"
             vm.closeOverlay()
@@ -109,26 +111,26 @@ fun DesignerScreen(vm: AppViewModel, state: DesignerState, target: BrowseTarget)
                 BrowseTarget.Home -> vm.startNew(layout.id, samples = true)
                 BrowseTarget.Designer -> {}
             }
-            vm.showToast("Saved “${layout.name}” to My layouts.")
+            vm.showToast(Strings.get(R.string.dz_saved_to_mine, layout.name))
         }
     }
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding().imePadding()) {
-        AppBar(onBack = { vm.closeOverlay() }, backLabel = "Close designer") {
+        AppBar(onBack = { vm.closeOverlay() }, backLabel = Strings.get(R.string.dz_close)) {
             Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).padding(horizontal = 4.dp, vertical = 6.dp)) {
                 CTextField(
-                    state.name, { state.name = it }, Modifier.fillMaxWidth(), "Name your layout",
+                    state.name, { state.name = it }, Modifier.fillMaxWidth(), Strings.get(R.string.dz_name_hint),
                     textStyle = TextStyle(fontFamily = CTheme.fonts.display(22f), fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = (-.4).sp),
                     placeholderColor = c.ink.copy(alpha = .9f), maxLength = 24, onDone = { focus.clearFocus() },
                 )
             }
             if (state.editId != null) {
-                IconBtn(Icon.Trash, "Delete this layout", {
-                    if (!state.armDelete) { state.armDelete = true; vm.showToast("Tap the bin again to delete this layout.") }
-                    else vm.deleteLayout(state.editId) { vm.closeOverlay(); vm.showToast("Layout deleted.") }
+                IconBtn(Icon.Trash, Strings.get(R.string.dz_delete_desc), {
+                    if (!state.armDelete) { state.armDelete = true; vm.showToast(Strings.get(R.string.dz_delete_confirm)) }
+                    else vm.deleteLayout(state.editId) { vm.closeOverlay(); vm.showToast(Strings.get(R.string.dz_deleted)) }
                 }, tint = if (state.armDelete) c.danger else c.ink)
             }
-            Pill("Save layout", ::save, icon = Icon.Check)
+            Pill(Strings.get(R.string.dz_save), ::save, icon = Icon.Check)
         }
         BoxWithConstraints(
             Modifier.weight(1f).padding(horizontal = 10.dp).fillMaxWidth().clip(RoundedCornerShape(26.dp))
@@ -156,7 +158,7 @@ fun DesignerScreen(vm: AppViewModel, state: DesignerState, target: BrowseTarget)
                 ScrollRow(Modifier.weight(1f), padding = 0.dp, spacing = 6.dp) {
                     DesignerTab.entries.forEach { t -> TabChip(t.label, state.tab == t, { state.tab = t }) }
                 }
-                CText("${state.cells.size} cell${if (state.cells.size == 1) "" else "s"}", size = 12.sp, color = c.muted)
+                CText(Strings.plural(R.plurals.p_cells, state.cells.size), size = 12.sp, color = c.muted)
             }
             when (state.tab) {
                 DesignerTab.Cells -> CellsTab(vm, state)
@@ -181,7 +183,7 @@ private fun DesignerCanvas(state: DesignerState, modifier: Modifier) {
     SideEffect { state.density = density.density }
     Canvas(
         modifier.shadow(10.dp, spotColor = Color(0x4D101828)).background(Color.White)
-            .semantics { this.contentDescription = "Layout canvas. Tap a cell, drag it to move, drag the dots to resize." }
+            .semantics { this.contentDescription = Strings.get(R.string.dz_canvas_desc) }
             .onSizeChanged { state.canvasW = it.width.toFloat(); state.canvasH = it.height.toFloat() }
             .pointerInput(state) {
                 awaitEachGesture {
@@ -241,16 +243,16 @@ private fun DesignerCanvas(state: DesignerState, modifier: Modifier) {
 private fun CellsTab(vm: AppViewModel, state: DesignerState) {
     val c = CTheme.colors
     fun run(msg: String?) { if (msg != null) vm.showToast(msg) }
-    if (state.selectedCell == null) CText("Tap a cell to select it.", Modifier.padding(horizontal = 18.dp), size = 13.sp, color = c.muted)
+    if (state.selectedCell == null) CText(Strings.get(R.string.dz_tap_select), Modifier.padding(horizontal = 18.dp), size = 13.sp, color = c.muted)
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        SquareIconBtn(Icon.SplitV, "Split into left and right", { run(state.split(true)) })
-        SquareIconBtn(Icon.SplitH, "Split into top and bottom", { run(state.split(false)) })
-        SquareIconBtn(Icon.Duplicate, "Duplicate cell", { run(state.duplicate()) })
-        SquareIconBtn(Icon.Trash, "Delete cell", { run(state.delete()) }, danger = true)
-        SquareIconBtn(Icon.ToFront, "Bring to front", { run(state.toFront()) })
-        SquareIconBtn(Icon.ToBack, "Send to back", { run(state.toBack()) })
-        SquareIconBtn(Icon.Undo, "Undo", state::undo, enabled = state.undoCount > 0)
-        SquareIconBtn(Icon.Redo, "Redo", state::redo, enabled = state.redoCount > 0)
+        SquareIconBtn(Icon.SplitV, Strings.get(R.string.dz_split_v), { run(state.split(true)) })
+        SquareIconBtn(Icon.SplitH, Strings.get(R.string.dz_split_h), { run(state.split(false)) })
+        SquareIconBtn(Icon.Duplicate, Strings.get(R.string.dz_dup_cell), { run(state.duplicate()) })
+        SquareIconBtn(Icon.Trash, Strings.get(R.string.dz_del_cell), { run(state.delete()) }, danger = true)
+        SquareIconBtn(Icon.ToFront, Strings.get(R.string.bring_front), { run(state.toFront()) })
+        SquareIconBtn(Icon.ToBack, Strings.get(R.string.dz_to_back), { run(state.toBack()) })
+        SquareIconBtn(Icon.Undo, Strings.get(R.string.undo), state::undo, enabled = state.undoCount > 0)
+        SquareIconBtn(Icon.Redo, Strings.get(R.string.redo), state::redo, enabled = state.redoCount > 0)
     }
 }
 
@@ -260,7 +262,8 @@ private fun ShapeTab(vm: AppViewModel, state: DesignerState) {
     val cell = state.selectedCell
     val key = state.selectedKey
     ScrollRow(padding = 14.dp, spacing = 8.dp, state = rememberScrollState(), tiles = true) {
-        DesignerShapes.forEach { (k, label) ->
+        DesignerShapes.forEach { (k, englishName) ->
+            val label = Strings.named("shape_$k", englishName)
             val on = key == k
             Box(
                 Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(if (on) c.accent else lerpColor(c.card, c.ink, .08f)).padding(9.dp)
@@ -272,7 +275,7 @@ private fun ShapeTab(vm: AppViewModel, state: DesignerState) {
     }
     if (cell != null && cell.isLetter) {
         Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            CText("LETTER", size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+            CText(Strings.get(R.string.label_letter), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
             var text by remember(state.selected) { mutableStateOf(cell.text.orEmpty()) }
             Box(Modifier.width(80.dp).clip(RoundedCornerShape(12.dp)).background(c.paper).border(1.dp, c.line, RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                 CTextField(
@@ -286,17 +289,17 @@ private fun ShapeTab(vm: AppViewModel, state: DesignerState) {
         Column(Modifier.padding(horizontal = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScrollRow(Modifier.weight(1f), padding = 0.dp, spacing = 6.dp) { ShapeAdjust.entries.forEach { a -> TabChip(a.label, state.adjust == a, { state.adjust = a }) } }
-                SquareIconBtn(Icon.Stretch, "Stretch the shape to fill the cell", state::toggleStretch, pressed = cell.fill)
+                SquareIconBtn(Icon.Stretch, Strings.get(R.string.dz_stretch), state::toggleStretch, pressed = cell.fill)
             }
             if (state.adjust == ShapeAdjust.Size) {
-                SliderOne((cell.scale * 100f), 30f..300f, { "${it.roundToInt()}%" }, state::setSize, step = 1f, label = "Shape size", onStart = state::beginEdit)
+                SliderOne((cell.scale * 100f), 30f..300f, { "${it.roundToInt()}%" }, state::setSize, step = 1f, label = Strings.get(R.string.dz_shape_size), onStart = state::beginEdit)
             } else {
-                SliderOne(cell.rotation, -180f..180f, { "${it.roundToInt()}°" }, state::setRotation, step = 1f, label = "Shape rotation", onStart = state::beginEdit)
+                SliderOne(cell.rotation, -180f..180f, { "${it.roundToInt()}°" }, state::setRotation, step = 1f, label = Strings.get(R.string.dz_shape_rot), onStart = state::beginEdit)
             }
         }
     } else {
         CText(
-            if (cell != null) "Rectangles are plain photo cells. Pick a shape or a letter to cut the photo into it." else "Pick a cell, then choose a shape for it.",
+            if (cell != null) Strings.get(R.string.dz_rect_hint) else Strings.get(R.string.dz_pick_cell),
             Modifier.padding(horizontal = 18.dp), size = 13.sp, color = c.muted, lineHeight = 19.sp,
         )
     }
@@ -310,7 +313,7 @@ private fun CanvasTab(vm: AppViewModel, state: DesignerState, target: BrowseTarg
             val on = state.aspect == a
             val k = 30f / maxOf(a.width, a.height)
             Column(
-                Modifier.width(64.dp).pressable({ state.aspect = a }, role = Role.RadioButton, label = "Aspect ${a.label}").semantics { selected = on },
+                Modifier.width(64.dp).pressable({ state.aspect = a }, role = Role.RadioButton, label = Strings.get(R.string.aspect_desc, a.label)).semantics { selected = on },
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
@@ -324,10 +327,10 @@ private fun CanvasTab(vm: AppViewModel, state: DesignerState, target: BrowseTarg
         }
     }
     Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        TabChip("Snap", state.snap, { state.snap = !state.snap })
-        TabChip("Link edges", state.link, { state.link = !state.link })
-        CButton("Start from…", { vm.openBrowse(BrowseTarget.Designer) }, small = true, style = BtnStyle.Tonal)
-        CButton("Clear", state::clear, small = true, style = BtnStyle.Ghost)
+        TabChip(Strings.get(R.string.dz_snap), state.snap, { state.snap = !state.snap })
+        TabChip(Strings.get(R.string.dz_link), state.link, { state.link = !state.link })
+        CButton(Strings.get(R.string.dz_start_from), { vm.openBrowse(BrowseTarget.Designer) }, small = true, style = BtnStyle.Tonal)
+        CButton(Strings.get(R.string.clear), state::clear, small = true, style = BtnStyle.Ghost)
     }
 }
 

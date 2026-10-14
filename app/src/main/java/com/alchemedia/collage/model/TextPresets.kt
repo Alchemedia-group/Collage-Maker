@@ -1,5 +1,7 @@
 package com.alchemedia.collage.model
 
+import com.alchemedia.collage.Strings
+
 private const val INK = 0xFF111827L
 private const val WHITE = 0xFFFFFFFFL
 
@@ -13,10 +15,13 @@ private fun luma(argb: Long): Float {
 /** White on dark fills, ink on light ones. */
 fun contrastColor(argb: Long?): Long = if (argb != null && luma(argb) < .55f) WHITE else INK
 
-data class TextPreset(val id: String, val name: String, val apply: (CanvasItem) -> CanvasItem)
+data class TextPreset(val id: String, val name: String, val apply: (CanvasItem) -> CanvasItem) {
+    val title: String get() = Strings.named("preset_$id", name)
+}
 
 /** A two-colour fade for text; [angle] runs 0 = left to right, 90 = top to bottom. */
 data class TextGradient(val name: String, val from: Long, val to: Long, val angle: Float) {
+    val title: String get() = Strings.named("grad_$name", name)
     fun on(item: CanvasItem): CanvasItem = item.copy(fill = from, fill2 = to, gradientAngle = angle)
 }
 
@@ -67,7 +72,9 @@ object TextPresets {
     )
 }
 
-data class TextTemplate(val name: String, val make: () -> List<CanvasItem>)
+data class TextTemplate(val name: String, val make: () -> List<CanvasItem>) {
+    val title: String get() = Strings.named("tpl_" + name.lowercase().replace(" ", "_"), name)
+}
 
 object TextTemplates {
     private val softShadow = ShadowSpec(0x59000000, .15f, 0f, .05f)

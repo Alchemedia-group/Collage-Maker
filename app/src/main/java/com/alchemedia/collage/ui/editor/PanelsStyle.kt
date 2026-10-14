@@ -1,5 +1,6 @@
 package com.alchemedia.collage.ui.editor
 
+import com.alchemedia.collage.Strings
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -93,7 +94,7 @@ fun ShapePanel(ed: EditorState) {
                 val on = ed.project.aspect == a
                 val k = 30f / maxOf(a.width, a.height)
                 Column(
-                    Modifier.width(64.dp).pressable({ ed.setAspect(a) }, role = Role.RadioButton, label = "Aspect ${a.label}").semantics { selected = on },
+                    Modifier.width(64.dp).pressable({ ed.setAspect(a) }, role = Role.RadioButton, label = Strings.get(R.string.aspect_desc, a.label)).semantics { selected = on },
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
@@ -107,9 +108,9 @@ fun ShapePanel(ed: EditorState) {
                 }
             }
         }
-        CText("SIZES FOR", Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+        CText(Strings.get(R.string.label_sizes_for), Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
         ScrollRow(padding = 14.dp, spacing = 6.dp) {
-            SocialPresets.all.forEach { s -> TabChip(s.name, ed.project.aspect == s.aspect, { ed.setAspect(s.aspect) }) }
+            SocialPresets.all.forEach { s -> TabChip(s.title, ed.project.aspect == s.aspect, { ed.setAspect(s.aspect) }) }
         }
     }
 }
@@ -125,7 +126,7 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
             StyleSub.Color -> {
                 ColorGrid(TextColors.backgrounds, p.background, ed::setBackground, onCustom = { onCustomColor(p.background, ed::setBackground) })
                 Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    CText("Background", size = 13.sp, color = CTheme.colors.muted)
+                    CText(Strings.get(R.string.background), size = 13.sp, color = CTheme.colors.muted)
                     CText(hexOf(p.background), size = 13.sp, weight = 700, letterSpacing = .5.sp)
                 }
             }
@@ -134,17 +135,17 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
                 Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     val c = CTheme.colors
                     Box(
-                        Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)).background(if (bg == null) c.tint else Color.Transparent).pressable(onPickBackground, label = "Choose a background image"),
+                        Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)).background(if (bg == null) c.tint else Color.Transparent).pressable(onPickBackground, label = Strings.get(R.string.choose_bg_image)),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (bg == null) CIcon(Icon.Photo, size = 26.dp, tint = c.onTint)
                         else AsyncImage(if (bg.fileName.startsWith("res:")) sampleDrawable(bg) else vm.store.photoFile(p.id, bg), null, Modifier.size(64.dp), contentScale = ContentScale.Crop)
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CText(if (bg == null) "Use one of your pictures behind the photos." else "The picture fills the whole background.", size = 13.sp, color = CTheme.colors.muted, lineHeight = 18.sp)
+                        CText(if (bg == null) Strings.get(R.string.bg_hint_none) else Strings.get(R.string.bg_hint_set), size = 13.sp, color = CTheme.colors.muted, lineHeight = 18.sp)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CButton(if (bg == null) "Choose image" else "Replace", onPickBackground, small = true, icon = Icon.Photo)
-                            if (bg != null) CButton("Remove", ed::clearBackgroundImage, small = true, style = BtnStyle.GhostDanger, icon = Icon.Trash)
+                            CButton(if (bg == null) Strings.get(R.string.choose_image) else Strings.get(R.string.replace), onPickBackground, small = true, icon = Icon.Photo)
+                            if (bg != null) CButton(Strings.get(R.string.remove), ed::clearBackgroundImage, small = true, style = BtnStyle.GhostDanger, icon = Icon.Trash)
                         }
                     }
                 }
@@ -152,26 +153,26 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
             StyleSub.Texture -> {
                 ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
                     Textures.all.forEach { t ->
-                        TileWithLabel(t.name, p.texture == t.id, { ed.setTexture(t.id, t.base) }) { TextureThumb(t.id, t.base) }
+                        TileWithLabel(t.title, p.texture == t.id, { ed.setTexture(t.id, t.base) }) { TextureThumb(t.id, t.base) }
                     }
                 }
                 val enabled = p.texture != "none"
                 Box(Modifier.alpha(if (enabled) 1f else .4f)) {
-                    SliderRow("Strength", p.textureAmount * 100f, 0f..150f, ::percentText, { if (enabled) ed.setTextureAmount(it / 100f) }, step = 1f)
+                    SliderRow(Strings.get(R.string.strength), p.textureAmount * 100f, 0f..150f, ::percentText, { if (enabled) ed.setTextureAmount(it / 100f) }, step = 1f)
                 }
             }
             StyleSub.Spacing -> {
-                SliderRow("Gap", p.gapPercent, 0f..12f, { "${it}%" }, ed::setGap, step = .25f)
-                SliderRow("Margin", p.marginPercent, -10f..12f, { "${it}%" }, ed::setMargin, step = .25f)
-                SliderRow("Corners", p.cornerPercent, 0f..100f, ::percentText, ed::setCorner, step = 1f)
+                SliderRow(Strings.get(R.string.gap), p.gapPercent, 0f..12f, { "${it}%" }, ed::setGap, step = .25f)
+                SliderRow(Strings.get(R.string.margin), p.marginPercent, -10f..12f, { "${it}%" }, ed::setMargin, step = .25f)
+                SliderRow(Strings.get(R.string.corners), p.cornerPercent, 0f..100f, ::percentText, ed::setCorner, step = 1f)
             }
             StyleSub.Frame -> {
                 ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
-                    Frames.all.forEach { f -> TileWithLabel(f.name, p.frame == f.id, { ed.setFrame(f.id) }) { FrameThumb(f.id) } }
+                    Frames.all.forEach { f -> TileWithLabel(f.title, p.frame == f.id, { ed.setFrame(f.id) }) { FrameThumb(f.id) } }
                 }
                 val on = p.frame != Frames.NONE
                 Box(Modifier.alpha(if (on) 1f else .4f)) {
-                    SliderRow("Width", p.frameAmount, 0f..Frames.MAX_AMOUNT, { "${(it * 10).roundToInt() / 10f}%" }, { if (on) ed.setFrameAmount(it) }, step = .5f)
+                    SliderRow(Strings.get(R.string.width), p.frameAmount, 0f..Frames.MAX_AMOUNT, { "${(it * 10).roundToInt() / 10f}%" }, { if (on) ed.setFrameAmount(it) }, step = .5f)
                 }
                 if (on) {
                     ColorRow(TextColors.palette, p.frameColor, { col -> if (col != null) ed.setFrameColor(col) }, onCustom = { onCustomColor(p.frameColor, ed::setFrameColor) })
@@ -180,7 +181,7 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
             StyleSub.Filter -> {
                 ScrollRow(padding = 14.dp, spacing = 10.dp, tiles = true) {
                     Filters.all.forEach { f ->
-                        TileWithLabel(f.name, p.filter == f.id, { ed.setFilter(f.id) }) {
+                        TileWithLabel(f.title, p.filter == f.id, { ed.setFilter(f.id) }) {
                             val matrix = Filters.matrix(f.id)?.array
                             AsyncImage(
                                 R.drawable.photo_beach, null, Modifier.size(60.dp), contentScale = ContentScale.Crop,
@@ -191,7 +192,7 @@ fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -
                 }
                 val enabled = p.filter != "none"
                 Box(Modifier.alpha(if (enabled) 1f else .4f)) {
-                    SliderRow("Strength", p.filterAmount * 100f, 0f..100f, ::percentText, { if (enabled) ed.setFilterAmount(it / 100f) }, step = 1f)
+                    SliderRow(Strings.get(R.string.strength), p.filterAmount * 100f, 0f..100f, ::percentText, { if (enabled) ed.setFilterAmount(it / 100f) }, step = 1f)
                 }
             }
         }
@@ -257,7 +258,7 @@ fun PhotoPanel(vm: AppViewModel, ed: EditorState, onAddPhotos: () -> Unit) {
     val p = ed.project
     val cell = p.cells.getOrNull(ed.selectedCell)
     if (cell == null) {
-        CText("Tap a cell on the collage to edit its photo.", Modifier.padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 8.dp), size = 13.sp, color = c.muted, lineHeight = 19.sp)
+        CText(Strings.get(R.string.tap_cell_edit_photo), Modifier.padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 8.dp), size = 13.sp, color = c.muted, lineHeight = 19.sp)
         return
     }
     val filled = cell.photoId != null
@@ -282,22 +283,22 @@ private fun PhotoMain(vm: AppViewModel, ed: EditorState, cell: com.alchemedia.co
             // Zoom goes up to 20x, so the slider is logarithmic: the same finger movement is the same proportional change.
             val top = kotlin.math.ln(MAX_ZOOM)
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                CText("Zoom", Modifier.width(62.dp), size = 14.sp, weight = 600)
+                CText(Strings.get(R.string.zoom), Modifier.width(62.dp), size = 14.sp, weight = 600)
                 com.alchemedia.collage.ui.components.BigSlider(
-                    kotlin.math.ln(cell.zoom) / top, { if (filled) ed.setZoom(kotlin.math.exp(it * top)) }, 0f..1f, Modifier.weight(1f), label = "Zoom",
+                    kotlin.math.ln(cell.zoom) / top, { if (filled) ed.setZoom(kotlin.math.exp(it * top)) }, 0f..1f, Modifier.weight(1f), label = Strings.get(R.string.zoom),
                 )
                 CText("${(cell.zoom * 100f).roundToInt()}%", Modifier.width(52.dp), size = 13.sp, weight = 600, align = TextAlign.End)
             }
         }
         Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CButton("Reset", ed::resetCell, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Reset)
-            CButton(if (ed.swapping) "Tap a cell…" else "Swap", { ed.swapping = !ed.swapping }, small = true, style = if (ed.swapping) BtnStyle.Primary else BtnStyle.Tonal, enabled = filled, icon = Icon.Swap)
-            CButton("Remove", ed::emptyCell, small = true, style = BtnStyle.GhostDanger, enabled = filled, icon = Icon.Trash)
+            CButton(Strings.get(R.string.reset), ed::resetCell, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Reset)
+            CButton(if (ed.swapping) Strings.get(R.string.tap_a_cell) else Strings.get(R.string.swap), { ed.swapping = !ed.swapping }, small = true, style = if (ed.swapping) BtnStyle.Primary else BtnStyle.Tonal, enabled = filled, icon = Icon.Swap)
+            CButton(Strings.get(R.string.remove), ed::emptyCell, small = true, style = BtnStyle.GhostDanger, enabled = filled, icon = Icon.Trash)
         }
-        CText("REPLACE WITH", Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+        CText(Strings.get(R.string.label_replace_with), Modifier.padding(horizontal = 16.dp), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
         ScrollRow(padding = 14.dp, spacing = 10.dp, state = rememberScrollState(), tiles = true) {
             Box(
-                Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(c.tint).pressable(onAddPhotos, label = "Add a photo from this device"),
+                Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(c.tint).pressable(onAddPhotos, label = Strings.get(R.string.add_photo_device)),
                 contentAlignment = Alignment.Center,
             ) { CIcon(Icon.Add, size = 22.dp, tint = c.onTint, strokeWidth = 2.6f) }
             p.photos.forEach { ref -> Mini(vm, p.id, ref, ref.id == cell.photoId) { ed.useExistingPhoto(ref) } }
@@ -309,12 +310,12 @@ private fun PhotoMain(vm: AppViewModel, ed: EditorState, cell: com.alchemedia.co
 @Composable
 private fun PhotoRotate(ed: EditorState, cell: com.alchemedia.collage.model.CellContent, filled: Boolean) {
     Column(Modifier.alpha(if (filled) 1f else .4f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SliderRow("Straighten", cell.angle, -45f..45f, { "${it.roundToInt()}°" }, { if (filled) ed.setAngle(it) }, step = 1f)
+        SliderRow(Strings.get(R.string.straighten), cell.angle, -45f..45f, { "${it.roundToInt()}°" }, { if (filled) ed.setAngle(it) }, step = 1f)
         ScrollRow(padding = 14.dp, spacing = 8.dp) {
-            CButton("Rotate", { if (filled) ed.rotateCell() }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Rotate)
-            CButton("Mirror", { if (filled) ed.mirrorCell(false) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Flip)
-            CButton("Flip", { if (filled) ed.mirrorCell(true) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.FlipV)
-            CButton("Reset", { if (filled) ed.resetCell() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasTurn, icon = Icon.Reset)
+            CButton(Strings.get(R.string.sub_rotate), { if (filled) ed.rotateCell() }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Rotate)
+            CButton(Strings.get(R.string.mirror), { if (filled) ed.mirrorCell(false) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Flip)
+            CButton(Strings.get(R.string.flip), { if (filled) ed.mirrorCell(true) }, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.FlipV)
+            CButton(Strings.get(R.string.reset), { if (filled) ed.resetCell() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasTurn, icon = Icon.Reset)
         }
     }
 }
@@ -333,7 +334,7 @@ private fun PhotoLight(ed: EditorState, cell: com.alchemedia.collage.model.CellC
             }
         }
         Row(Modifier.padding(horizontal = 14.dp)) {
-            CButton("Reset light", { if (filled) ed.resetLook() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasLook, icon = Icon.Reset)
+            CButton(Strings.get(R.string.reset_light), { if (filled) ed.resetLook() }, small = true, style = BtnStyle.Ghost, enabled = filled && cell.hasLook, icon = Icon.Reset)
         }
     }
 }
@@ -344,6 +345,6 @@ private fun Mini(vm: AppViewModel, projectId: String, ref: PhotoRef, selected: B
     val model: Any = if (ref.fileName.startsWith("res:")) sampleDrawable(ref) else vm.store.photoFile(projectId, ref)
     Box(
         Modifier.size(46.dp).then(if (selected) Modifier.border(2.5.dp, c.accent, RoundedCornerShape(12.dp)).padding(3.dp) else Modifier).clip(RoundedCornerShape(12.dp))
-            .pressable(onClick, label = "Use this photo"),
+            .pressable(onClick, label = Strings.get(R.string.use_this_photo)),
     ) { AsyncImage(model, null, Modifier.fillMaxWidth().size(46.dp), contentScale = ContentScale.Crop) }
 }

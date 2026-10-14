@@ -1,5 +1,7 @@
 package com.alchemedia.collage.model
 
+import com.alchemedia.collage.R
+import com.alchemedia.collage.Strings
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -31,7 +33,10 @@ data class Layout(
     val kw: String = "",
     val cells: List<LayoutCell>,
     val mine: Boolean = false,
-)
+) {
+    /** The name to show: translated for the built-in layouts, as typed for the user's own. */
+    val title: String get() = if (mine || id == LayoutCatalog.DRAFT_ID) name else Strings.named("layout_$id", name)
+}
 
 @Serializable
 data class LayoutFile(val shapes: Map<String, String>, val layouts: List<Layout>)
@@ -41,11 +46,17 @@ object LayoutCategories {
     val all = listOf("fit" to "For you", "grid" to "Grids", "feature" to "Feature", "mosaic" to "Mosaic", "shape" to "Shapes", "letters" to "Letters", "mine" to "Mine")
     val browsable = all.filter { it.first != "fit" }
 
-    fun title(id: String): String = if (id == "mine") "My layouts" else all.firstOrNull { it.first == id }?.second ?: id
+    /** The category chip text, in the current language. */
+    fun label(id: String): String = Strings.named("lc_$id", all.firstOrNull { it.first == id }?.second ?: id)
+
+    fun title(id: String): String = if (id == "mine") Strings.named("lc_mine_title", "My layouts") else label(id)
 }
 
 enum class CountFilter(val label: String) {
     Any("Any"), One("1"), Two("2"), Three("3"), Four("4"), Five("5"), Six("6"), SevenToNine("7-9"), TenPlus("10+");
+
+    /** "Any" is a word, so it is translated; the numbers are not. */
+    val title: String get() = if (this == Any) Strings.get(R.string.any) else label
 
     fun matches(n: Int): Boolean = when (this) {
         Any -> true
@@ -155,16 +166,20 @@ object LayoutCatalog {
         return (exact + near).take(28)
     }
 
+    /** Lower case with the accents taken off Latin letters, so "corazon" finds "corazón" and "cœur" finds "Coeur". */
+    private fun plain(text: String): String =
+        java.text.Normalizer.normalize(text.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("[\\u0300-\\u036f]"), "").replace("œ", "oe")
+
     /** Browse sheet: free text (a number means "this many photos"), photo-count filter and category. */
     fun search(query: String, count: CountFilter, category: String?): List<Layout> {
-        val q = query.trim().lowercase()
+        val q = plain(query.trim())
         val byNumber = q.isNotEmpty() && q.all { it.isDigit() }
         return all.filter { l ->
             (category == null || l.cat == category) && count.matches(l.cells.size) &&
                 when {
                     q.isEmpty() -> true
                     byNumber -> l.cells.size == q.toIntOrNull()
-                    else -> "${l.name} ${l.kw} ${LayoutCategories.title(l.cat)}".lowercase().contains(q)
+                    else -> plain("${l.title} ${l.name} ${l.kw} ${LayoutCategories.title(l.cat)}").contains(q)
                 }
         }
     }

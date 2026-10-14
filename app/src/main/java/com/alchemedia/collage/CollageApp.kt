@@ -25,6 +25,8 @@ class CollageApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Strings.setLanguage(settings.language.value)
+        Strings.init(this)
         Fonts.init(this)
         LayoutCatalog.load(assets.open("layouts.json").bufferedReader().use { it.readText() })
     }

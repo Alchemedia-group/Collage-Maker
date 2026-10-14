@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.home
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +54,7 @@ import java.util.Date
 internal fun dayLabel(time: Long, now: Long = System.currentTimeMillis()): String {
     fun day(t: Long) = Calendar.getInstance().apply { timeInMillis = t; set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
     val diff = Math.round((day(now) - day(time)) / 86_400_000.0)
-    return when { diff <= 0 -> "Today"; diff == 1L -> "Yesterday"; diff < 7 -> "This week"; else -> "Earlier" }
+    return when { diff <= 0 -> Strings.get(R.string.today); diff == 1L -> Strings.get(R.string.yesterday); diff < 7 -> Strings.get(R.string.this_week); else -> Strings.get(R.string.earlier) }
 }
 
 /** Every collage you have saved, newest first, ready to open again. */
@@ -65,16 +67,16 @@ fun HistoryScreen(vm: AppViewModel) {
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding()) {
         AppBar(onBack = { vm.closeOverlay() }) {
-            BarTitle("History", Modifier.weight(1f))
+            BarTitle(Strings.get(R.string.history), Modifier.weight(1f))
             CountBadge(history.size.toString())
             if (history.isNotEmpty()) {
-                LinkBtn(if (armed) "Tap again to clear" else "Clear all", { if (!armed) armed = true else { armed = false; vm.clearHistory() } })
+                LinkBtn(if (armed) Strings.get(R.string.tap_again_clear) else Strings.get(R.string.clear_all), { if (!armed) armed = true else { armed = false; vm.clearHistory() } })
             }
         }
         if (history.isEmpty()) {
             Column(Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                CText("No saved collages yet", size = 22.sp, weight = 700, display = true)
-                CText("Collages you save will show up here so you can open them again.", Modifier.padding(top = 6.dp), size = 14.sp, color = c.muted)
+                CText(Strings.get(R.string.no_saved_collages), size = 22.sp, weight = 700, display = true)
+                CText(Strings.get(R.string.saved_show_here), Modifier.padding(top = 6.dp), size = 14.sp, color = c.muted)
             }
         } else {
             val groups = remember(history) { history.groupBy { dayLabel(it.time) } }
@@ -92,12 +94,12 @@ fun HistoryScreen(vm: AppViewModel) {
 private fun HistoryRow(vm: AppViewModel, entry: HistoryEntry, label: String) {
     val c = CTheme.colors
     val photos = rememberPhotos(entry.project, 240)
-    val name = entry.project.name.ifBlank { "Untitled collage" }
-    val whenText = if (label == "Today" || label == "Yesterday") DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(entry.time))
+    val name = entry.project.name.ifBlank { Strings.get(R.string.untitled) }
+    val whenText = if (label == Strings.get(R.string.today) || label == Strings.get(R.string.yesterday)) DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(entry.time))
     else DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(entry.time))
     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(
-            Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(c.card).pressable({ vm.openSheet(Sheet.HistoryItem(entry.id)) }, label = "Open $name").padding(8.dp),
+            Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(c.card).pressable({ vm.openSheet(Sheet.HistoryItem(entry.id)) }, label = Strings.get(R.string.open_item, name)).padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(64.dp).clip(RoundedCornerShape(10.dp)).background(lerpColor(c.card, c.ink, .06f)).padding(5.dp), contentAlignment = Alignment.Center) {
@@ -105,14 +107,14 @@ private fun HistoryRow(vm: AppViewModel, entry: HistoryEntry, label: String) {
             }
             Column(Modifier.weight(1f)) {
                 CText(name, size = 15.sp, weight = 700, display = true, maxLines = 1)
-                CText("$whenText · ${entry.width} × ${entry.height} · ${entry.project.layout.name}", size = 12.sp, color = c.muted, maxLines = 2)
+                CText("$whenText · ${entry.width} × ${entry.height} · ${entry.project.layout.title}", size = 12.sp, color = c.muted, maxLines = 2)
             }
             Box(Modifier.clip(CircleShape).background(if (entry.watermark) c.tint else c.pro).padding(horizontal = 7.dp, vertical = 3.dp)) {
-                CText(if (entry.watermark) "WATERMARK" else "PRO", size = 10.sp, weight = 800, color = if (entry.watermark) c.onTint else c.onPro, letterSpacing = .6.sp)
+                CText(if (entry.watermark) Strings.get(R.string.watermark_tag) else Strings.get(R.string.pro_tag), size = 10.sp, weight = 800, color = if (entry.watermark) c.onTint else c.onPro, letterSpacing = .6.sp)
             }
         }
         Box(
-            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(c.card).pressable({ vm.deleteHistory(entry.id) }, label = "Delete $name from History"),
+            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(c.card).pressable({ vm.deleteHistory(entry.id) }, label = Strings.get(R.string.delete_from_history, name)),
             contentAlignment = Alignment.Center,
         ) { CIcon(Icon.Trash, size = 20.dp, tint = c.danger) }
     }

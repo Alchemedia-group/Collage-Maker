@@ -1,5 +1,8 @@
 package com.alchemedia.collage.ui.sheets
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.alchemedia.collage.Strings
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -87,7 +90,7 @@ private fun Print(image: ImageBitmap?, ratio: Float, modifier: Modifier = Modifi
                 .shadow(12.dp, RoundedCornerShape(4.dp), spotColor = Color(0x4D101828)).background(Color.White, RoundedCornerShape(4.dp)).padding(9.dp),
         ) {
             if (image != null) {
-                Image(image, "Collage preview", Modifier.heightIn(max = 232.dp).then(if (ratio >= 1f) Modifier.fillMaxWidth(.8f) else Modifier), contentScale = ContentScale.Fit)
+                Image(image, Strings.get(R.string.collage_preview), Modifier.heightIn(max = 232.dp).then(if (ratio >= 1f) Modifier.fillMaxWidth(.8f) else Modifier), contentScale = ContentScale.Fit)
             } else {
                 Box(Modifier.size((200 * ratio.coerceAtMost(1.3f)).dp, 200.dp / ratio.coerceAtLeast(1f)))
             }
@@ -110,25 +113,25 @@ fun ProSheet(vm: AppViewModel) {
     LaunchedEffect(Unit) { billing.connect() }
     SheetHost(onDismiss = vm::closeSheet) {
         Box { ProTag() }
-        SheetTitle(if (pro) "You're Pro" else "Photo Collage Pro")
+        SheetTitle(if (pro) Strings.get(R.string.you_are_pro) else Strings.get(R.string.photo_collage_pro))
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             CText(price, size = 46.sp, weight = 800, display = true, letterSpacing = (-1.4).sp)
-            CText("/ month", Modifier.padding(bottom = 8.dp), size = 16.sp, weight = 600, color = c.muted)
+            CText(Strings.get(R.string.per_month_word), Modifier.padding(bottom = 8.dp), size = 16.sp, weight = 600, color = c.muted)
         }
-        Perk("Removes the watermark from every export")
-        MetaText(if (pro) "Your subscription is active. Manage or cancel it any time in Google Play." else "Billed monthly through Google Play. Cancel any time in Google Play.")
+        Perk(Strings.get(R.string.perk_no_watermark))
+        MetaText(if (pro) Strings.get(R.string.pro_active) else Strings.get(R.string.pro_billed))
         message?.let { CText(it, Modifier.fillMaxWidth(), size = 13.sp, weight = 600, color = c.danger, align = androidx.compose.ui.text.style.TextAlign.Center) }
         if (pro) {
             val context = LocalContext.current
-            CButton("Manage subscription", {
+            CButton(Strings.get(R.string.manage_subscription), {
                 val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=${BillingManager.PRODUCT_ID}&package=${context.packageName}")
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
             })
-            CButton("Done", vm::closeSheet, style = BtnStyle.Ghost)
+            CButton(Strings.get(R.string.done), vm::closeSheet, style = BtnStyle.Ghost)
         } else {
-            CButton("Subscribe for $price / month", { activity?.let(billing::subscribe) }, enabled = !busy && activity != null)
-            CButton("Not now", vm::closeSheet, style = BtnStyle.Ghost)
-            Box(Modifier.align(Alignment.CenterHorizontally)) { LinkBtn("Restore purchase", billing::restore) }
+            CButton(Strings.get(R.string.subscribe_for, price), { activity?.let(billing::subscribe) }, enabled = !busy && activity != null)
+            CButton(Strings.get(R.string.not_now), vm::closeSheet, style = BtnStyle.Ghost)
+            Box(Modifier.align(Alignment.CenterHorizontally)) { LinkBtn(Strings.get(R.string.restore_purchase), billing::restore) }
         }
         if (BuildConfig.DEBUG) {
             CButton(if (pro) "Debug: switch Pro off" else "Debug: switch Pro on (no payment)", { vm.settings.setPro(!pro) }, style = BtnStyle.Ghost, small = true, modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -144,6 +147,46 @@ private fun Perk(text: String) {
             com.alchemedia.collage.ui.components.CIcon(com.alchemedia.collage.ui.components.Icon.Check, size = 12.dp, tint = c.accent, strokeWidth = 3f)
         }
         CText(text, size = 14.sp, weight = 600)
+    }
+}
+
+// ----------------------------------------------------------------------------------------------- language
+
+/** Pick the app's language. "Phone language" follows the system; the others stay put whatever the phone says. */
+@Composable
+fun LanguageSheet(vm: AppViewModel) {
+    val c = CTheme.colors
+    val current by vm.settings.language.collectAsStateWithLifecycle()
+    val activity = LocalActivity.current
+    fun pick(tag: String) {
+        if (tag == current) { vm.closeSheet(); return }
+        vm.settings.setLanguage(tag)
+        Strings.setLanguage(tag)
+        vm.closeSheet()
+        // Screens read their text when they are built, so the activity is rebuilt in the new language.
+        activity?.recreate()
+    }
+    SheetHost(onDismiss = vm::closeSheet) {
+        SheetTitle(Strings.get(R.string.language))
+        Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            LanguageRow(Strings.get(R.string.language_system), current.isEmpty()) { pick("") }
+            Strings.languages.forEach { l -> LanguageRow(l.nativeName, current == l.tag) { pick(l.tag) } }
+        }
+        CButton(Strings.get(R.string.cancel), vm::closeSheet, style = BtnStyle.Ghost)
+    }
+}
+
+@Composable
+private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit) {
+    val c = CTheme.colors
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (selected) c.tint else c.card)
+            .border(1.dp, if (selected) c.accent else c.line, RoundedCornerShape(14.dp))
+            .pressable(onClick, role = Role.RadioButton, label = name).semantics { this.selected = selected }.padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CText(name, Modifier.weight(1f), size = 16.sp, weight = if (selected) 800 else 600, color = if (selected) c.onTint else c.ink)
+        if (selected) com.alchemedia.collage.ui.components.CIcon(com.alchemedia.collage.ui.components.Icon.Check, size = 18.dp, tint = c.accent, strokeWidth = 3f)
     }
 }
 
@@ -174,26 +217,26 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
         saving = true
         scope.launch {
             val bmp = Exporter.renderWithFallback(vm.photos, project, watermark = !usePro)
-            if (bmp == null) { saving = false; vm.showToast("There isn't enough memory to save this collage. Close other apps and try again."); return@launch }
+            if (bmp == null) { saving = false; vm.showToast(Strings.get(R.string.err_memory)); return@launch }
             val uri = Exporter.saveToGallery(context, bmp)
             saving = false
-            if (uri == null) { vm.showToast("Couldn't save the picture. Check there's space on this device and try again."); return@launch }
+            if (uri == null) { vm.showToast(Strings.get(R.string.err_save)); return@launch }
             vm.store.recordHistory(project, bmp.width, bmp.height, watermark = !usePro)
             vm.closeSheets()
             if (share) {
                 val send = ShareTargets.sendIntent(uri, packageName)
                 // One app's own share screen when asked for; if it won't open, the system chooser.
                 val opened = packageName != null && runCatching { context.startActivity(send) }.isSuccess
-                if (!opened) runCatching { context.startActivity(Intent.createChooser(ShareTargets.sendIntent(uri), "Share collage")) }
+                if (!opened) runCatching { context.startActivity(Intent.createChooser(ShareTargets.sendIntent(uri), Strings.get(R.string.share_collage))) }
             }
-            vm.showToast("Saved to your gallery.")
+            vm.showToast(Strings.get(R.string.saved_gallery))
         }
     }
     var pending by remember { mutableStateOf<Pair<Boolean, String?>?>(null) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val job = pending
         pending = null
-        if (granted && job != null) perform(job.first, job.second) else vm.showToast("Allow storage access to save your collage.")
+        if (granted && job != null) perform(job.first, job.second) else vm.showToast(Strings.get(R.string.err_storage_perm))
     }
     fun start(share: Boolean, packageName: String? = null) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -204,31 +247,31 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
     val targets = remember { ShareTargets.installed(context) }
 
     SheetHost(onDismiss = vm::closeSheet) {
-        SheetTitle("Save collage")
+        SheetTitle(Strings.get(R.string.save_collage))
         Print(preview, project.aspect.ratio)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PlanCard(Modifier.weight(1f), selected = !usePro, onClick = { usePro = false }) {
-                CText("Free", size = 17.sp, weight = 800, display = true)
-                CText("Small Photo Collage mark in the corner.", size = 12.sp, color = c.muted, lineHeight = 16.sp)
+                CText(Strings.get(R.string.free), size = 17.sp, weight = 800, display = true)
+                CText(Strings.get(R.string.free_mark), size = 12.sp, color = c.muted, lineHeight = 16.sp)
             }
             PlanCard(Modifier.weight(1f), selected = usePro, onClick = { if (pro) usePro = true else vm.openSheet(com.alchemedia.collage.ui.Sheet.Pro) }, badge = { ProTag(Modifier.align(Alignment.TopEnd).offset(x = (-10).dp, y = (-10).dp)) }) {
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    CText("Pro", size = 17.sp, weight = 800, display = true)
-                    CText("$price / month", Modifier.padding(bottom = 1.dp), size = 12.sp, weight = 600, color = c.muted, maxLines = 1)
+                    CText(Strings.get(R.string.pro), size = 17.sp, weight = 800, display = true)
+                    CText(Strings.get(R.string.price_per_month, price), Modifier.padding(bottom = 1.dp), size = 12.sp, weight = 600, color = c.muted, maxLines = 1)
                 }
-                CText("Removes the watermark from every export.", size = 12.sp, color = c.muted, lineHeight = 16.sp)
+                CText(Strings.get(R.string.pro_removes), size = 12.sp, color = c.muted, lineHeight = 16.sp)
             }
         }
-        MetaText("$w × $h px${if (usePro) ", no watermark" else ", with watermark"}")
+        MetaText(Strings.get(if (usePro) R.string.export_meta_pro else R.string.export_meta_free, w, h))
         if (targets.isNotEmpty()) {
-            CText("SHARE TO", size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
+            CText(Strings.get(R.string.label_share_to), size = 11.sp, weight = 700, color = c.muted, letterSpacing = 1.sp)
             ScrollRow(padding = 0.dp, spacing = 14.dp) {
                 targets.forEach { t -> ShareTile(t, enabled = !saving) { start(true, t.packageName) } }
             }
         }
-        CButton(if (saving) "Saving…" else "Save to gallery", { start(false) }, enabled = !saving)
-        CButton("Share", { start(true) }, style = BtnStyle.Tonal, enabled = !saving)
-        CButton("Keep editing", vm::closeSheet, style = BtnStyle.Ghost)
+        CButton(if (saving) Strings.get(R.string.saving) else Strings.get(R.string.save_to_gallery), { start(false) }, enabled = !saving)
+        CButton(Strings.get(R.string.share), { start(true) }, style = BtnStyle.Tonal, enabled = !saving)
+        CButton(Strings.get(R.string.keep_editing), vm::closeSheet, style = BtnStyle.Ghost)
     }
 }
 
@@ -241,7 +284,7 @@ private fun ShareTile(target: ShareTarget, enabled: Boolean, onClick: () -> Unit
         runCatching { context.packageManager.getApplicationIcon(target.packageName).toBitmap(96, 96).asImageBitmap() }.getOrNull()
     }
     Column(
-        Modifier.width(62.dp).pressable(onClick, label = "Share to ${target.label}", enabled = enabled),
+        Modifier.width(62.dp).pressable(onClick, label = Strings.get(R.string.share_to_app, target.label), enabled = enabled),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         Box(Modifier.size(46.dp).clip(RoundedCornerShape(13.dp)).background(c.tint), contentAlignment = Alignment.Center) {
@@ -276,12 +319,12 @@ fun CardSheet(vm: AppViewModel, projectId: String) {
     val photos = project.cells.count { it.photoId != null }
     val date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(project.updatedAt))
     SheetHost(onDismiss = vm::closeSheet) {
-        SheetTitle(project.name.ifBlank { "Untitled collage" })
-        MetaText("$photos photo${if (photos == 1) "" else "s"} · ${project.layout.name} · edited $date")
-        CButton("Open", { vm.closeSheet(); vm.openProject(projectId) })
-        CButton("Duplicate", { vm.closeSheet(); vm.duplicateProject(projectId) }, style = BtnStyle.Tonal)
-        CButton("Delete collage", { vm.closeSheet(); vm.deleteProject(projectId) }, style = BtnStyle.GhostDanger)
-        CButton("Cancel", vm::closeSheet, style = BtnStyle.Ghost)
+        SheetTitle(project.name.ifBlank { Strings.get(R.string.untitled) })
+        MetaText(Strings.get(R.string.card_meta, Strings.plural(R.plurals.p_photos, photos), project.layout.title, date))
+        CButton(Strings.get(R.string.open), { vm.closeSheet(); vm.openProject(projectId) })
+        CButton(Strings.get(R.string.duplicate), { vm.closeSheet(); vm.duplicateProject(projectId) }, style = BtnStyle.Tonal)
+        CButton(Strings.get(R.string.delete_collage), { vm.closeSheet(); vm.deleteProject(projectId) }, style = BtnStyle.GhostDanger)
+        CButton(Strings.get(R.string.cancel), vm::closeSheet, style = BtnStyle.Ghost)
     }
 }
 
@@ -299,13 +342,13 @@ fun HistoryItemSheet(vm: AppViewModel, entryId: String) {
     val time = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(entry.time))
     val day = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(entry.time))
     SheetHost(onDismiss = vm::closeSheet) {
-        SheetTitle(entry.project.name.ifBlank { "Untitled collage" })
+        SheetTitle(entry.project.name.ifBlank { Strings.get(R.string.untitled) })
         Print(image, entry.project.aspect.ratio)
-        MetaText("Saved $day at $time · ${entry.width} × ${entry.height}${if (entry.watermark) " · with watermark" else " · no watermark"}")
-        CButton("Edit again", { vm.closeSheets(); vm.editAgain(entry) })
+        MetaText(Strings.get(if (entry.watermark) R.string.hist_meta_wm else R.string.hist_meta_pro, day, time, entry.width, entry.height))
+        CButton(Strings.get(R.string.edit_again), { vm.closeSheets(); vm.editAgain(entry) })
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            CButton("Delete", { vm.deleteHistory(entry.id) }, Modifier.weight(1f), style = BtnStyle.GhostDanger)
-            CButton("Close", vm::closeSheet, Modifier.weight(1f), style = BtnStyle.Ghost)
+            CButton(Strings.get(R.string.delete), { vm.deleteHistory(entry.id) }, Modifier.weight(1f), style = BtnStyle.GhostDanger)
+            CButton(Strings.get(R.string.close), vm::closeSheet, Modifier.weight(1f), style = BtnStyle.Ghost)
         }
     }
 }

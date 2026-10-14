@@ -1,5 +1,7 @@
 package com.alchemedia.collage.ui.components
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -34,7 +36,7 @@ fun AppBar(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     backIcon: Icon = Icon.Back,
-    backLabel: String = "Back",
+    backLabel: String = Strings.get(R.string.back),
     height: Dp = 52.dp,
     content: @Composable RowScope.() -> Unit,
 ) {

@@ -18,6 +18,7 @@ enum class Icon(val parts: List<IconPart>) {
     ToBack(listOf(IconPart("M6 4H14A2 2 0 0 1 16 6V14A2 2 0 0 1 14 16H6A2 2 0 0 1 4 14V6A2 2 0 0 1 6 4Z", true, .4f), IconPart("M10 8H18A2 2 0 0 1 20 10V18A2 2 0 0 1 18 20H10A2 2 0 0 1 8 18V10A2 2 0 0 1 10 8Z", false, 1f))),
     Flip(listOf(IconPart("M12 3v18M8 7L3 12l5 5V7zM16 7l5 5-5 5V7z", false, 1f))),
     FlipV(listOf(IconPart("M3 12h2M9 12h2M13 12h2M19 12h2M6 9l6-5 6 5ZM6 15l6 5 6-5Z", false, 1f))),
+    Globe(listOf(IconPart("M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z", false, 1f), IconPart("M3 12h18", false, 1f), IconPart("M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3Z", false, 1f))),
     Rotate(listOf(IconPart("M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5", false, 1f))),
     Star(listOf(IconPart("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8Z", false, 1f))),
     StarFilled(listOf(IconPart("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8Z", true, 1f), IconPart("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8Z", false, 1f))),

@@ -1,0 +1,47 @@
+"""Strings that only the web demo has (labels for screen readers, sample content, demo notices).
+Each value is a tuple in the order es, de, fr, it, pt, hi, id."""
+
+PLAIN = {
+    'Background colour': ('Color de fondo', 'Hintergrundfarbe', 'Couleur de fond', 'Colore di sfondo', 'Cor de fundo', 'पृष्ठभूमि का रंग', 'Warna latar'),
+    'Background texture': ('Textura de fondo', 'Hintergrundtextur', 'Texture de fond', 'Texture di sfondo', 'Textura de fundo', 'पृष्ठभूमि की बनावट', 'Tekstur latar'),
+    'Category': ('Categoría', 'Kategorie', 'Catégorie', 'Categoria', 'Categoria', 'श्रेणी', 'Kategori'),
+    'Cell shape': ('Forma de la celda', 'Zellenform', 'Forme de la cellule', 'Forma della cella', 'Forma da célula', 'सेल का आकार', 'Bentuk sel'),
+    'Designer tools': ('Herramientas de diseño', 'Design-Werkzeuge', 'Outils de création', 'Strumenti di progettazione', 'Ferramentas de design', 'डिज़ाइन टूल', 'Alat desain'),
+    'Editor': ('Editor', 'Editor', 'Éditeur', 'Editor', 'Editor', 'एडिटर', 'Editor'),
+    'Layout categories': ('Categorías de diseños', 'Layout-Kategorien', 'Catégories de modèles', 'Categorie di layout', 'Categorias de layouts', 'लेआउट श्रेणियाँ', 'Kategori tata letak'),
+    'Layout designer': ('Diseñador de diseños', 'Layout-Designer', 'Créateur de modèles', 'Designer di layout', 'Designer de layouts', 'लेआउट डिज़ाइनर', 'Desainer tata letak'),
+    'More options': ('Más opciones', 'Weitere Optionen', 'Plus d’options', 'Altre opzioni', 'Mais opções', 'और विकल्प', 'Opsi lainnya'),
+    'Photo filter': ('Filtro de foto', 'Fotofilter', 'Filtre photo', 'Filtro foto', 'Filtro da foto', 'फ़ोटो फ़िल्टर', 'Filter foto'),
+    'Photo frame': ('Marco de foto', 'Fotorahmen', 'Cadre photo', 'Cornice foto', 'Moldura da foto', 'फ़ोटो फ़्रेम', 'Bingkai foto'),
+    'Photo options': ('Opciones de foto', 'Foto-Optionen', 'Options de la photo', 'Opzioni foto', 'Opções da foto', 'फ़ोटो विकल्प', 'Opsi foto'),
+    'See all': ('Ver todo', 'Alle ansehen', 'Tout voir', 'Vedi tutto', 'Ver tudo', 'सभी देखें', 'Lihat semua'),
+    'Scroll left': ('Desplazar a la izquierda', 'Nach links scrollen', 'Défiler vers la gauche', 'Scorri a sinistra', 'Rolar para a esquerda', 'बाएँ स्क्रोल करें', 'Gulir ke kiri'),
+    'Scroll right': ('Desplazar a la derecha', 'Nach rechts scrollen', 'Défiler vers la droite', 'Scorri a destra', 'Rolar para a direita', 'दाएँ स्क्रोल करें', 'Gulir ke kanan'),
+    'Shape options': ('Opciones de forma', 'Form-Optionen', 'Options de forme', 'Opzioni forma', 'Opções de forma', 'आकार विकल्प', 'Opsi bentuk'),
+    'Size options': ('Opciones de tamaño', 'Größenoptionen', 'Options de taille', 'Opzioni dimensione', 'Opções de tamanho', 'आकार विकल्प', 'Opsi ukuran'),
+    'Sizes for social apps and prints': ('Tamaños para redes sociales e impresión', 'Größen für Social Media und Druck', 'Tailles pour les réseaux sociaux et l’impression', 'Dimensioni per social e stampa', 'Tamanhos para redes sociais e impressão', 'सोशल ऐप और प्रिंट के लिए आकार', 'Ukuran untuk media sosial dan cetak'),
+    'Split left / right': ('Dividir izquierda / derecha', 'Links / rechts teilen', 'Diviser gauche / droite', 'Dividi sinistra / destra', 'Dividir esquerda / direita', 'बाएँ / दाएँ बाँटें', 'Bagi kiri / kanan'),
+    'Split top / bottom': ('Dividir arriba / abajo', 'Oben / unten teilen', 'Diviser haut / bas', 'Dividi alto / basso', 'Dividir cima / baixo', 'ऊपर / नीचे बाँटें', 'Bagi atas / bawah'),
+    'Sticker options': ('Opciones de pegatina', 'Sticker-Optionen', 'Options de l’autocollant', 'Opzioni sticker', 'Opções do adesivo', 'स्टिकर विकल्प', 'Opsi stiker'),
+    'Style options': ('Opciones de estilo', 'Stil-Optionen', 'Options de style', 'Opzioni stile', 'Opções de estilo', 'शैली विकल्प', 'Opsi gaya'),
+    'Text gradient': ('Degradado del texto', 'Textverlauf', 'Dégradé du texte', 'Sfumatura del testo', 'Gradiente do texto', 'टेक्स्ट ग्रेडिएंट', 'Gradasi teks'),
+    'Text options': ('Opciones de texto', 'Text-Optionen', 'Options du texte', 'Opzioni testo', 'Opções de texto', 'टेक्स्ट विकल्प', 'Opsi teks'),
+    'Tools': ('Herramientas', 'Werkzeuge', 'Outils', 'Strumenti', 'Ferramentas', 'टूल', 'Alat'),
+    'What to colour': ('Qué colorear', 'Was einfärben', 'Quoi colorier', 'Cosa colorare', 'O que colorir', 'क्या रंगना है', 'Yang diwarnai'),
+    'Export plan': ('Plan de exportación', 'Export-Tarif', 'Formule d’export', 'Piano di esportazione', 'Plano de exportação', 'एक्सपोर्ट प्लान', 'Paket ekspor'),
+    'Home': ('Inicio', 'Start', 'Accueil', 'Home', 'Início', 'होम', 'Beranda'),
+    'Collage': ('Collage', 'Collage', 'Collage', 'Collage', 'Colagem', 'कोलाज', 'Kolase'),
+    'Hearts': ('Corazones', 'Herzen', 'Cœurs', 'Cuori', 'Corações', 'दिल', 'Hati'),
+    'City nights': ('Noches de ciudad', 'Stadtnächte', 'Nuits en ville', 'Notti in città', 'Noites na cidade', 'शहर की रातें', 'Malam kota'),
+    'Coast trip': ('Viaje a la costa', 'Reise an die Küste', 'Voyage à la côte', 'Gita al mare', 'Viagem à costa', 'तट की यात्रा', 'Perjalanan ke pantai'),
+    'Photo Collage Demo': ('Photo Collage, demostración', 'Photo Collage, Demo', 'Photo Collage, démo', 'Photo Collage, demo', 'Photo Collage, demonstração', 'Photo Collage, डेमो', 'Photo Collage, demo'),
+    'Pro is on for this demo. No payment was taken.': ('Pro está activado en esta demostración. No se ha cobrado nada.', 'Pro ist in dieser Demo aktiv. Es wurde nichts abgebucht.', 'Pro est activé dans cette démo. Aucun paiement n’a été effectué.', 'Pro è attivo in questa demo. Non è stato addebitato nulla.', 'O Pro está ativo nesta demonstração. Nenhum pagamento foi cobrado.', 'इस डेमो में Pro चालू है। कोई भुगतान नहीं लिया गया।', 'Pro aktif di demo ini. Tidak ada pembayaran yang dikenakan.'),
+    'Those files could not be read.': ('No se pudieron leer esos archivos.', 'Diese Dateien konnten nicht gelesen werden.', 'Ces fichiers n’ont pas pu être lus.', 'Impossibile leggere quei file.', 'Não foi possível ler esses arquivos.', 'वे फ़ाइलें पढ़ी नहीं जा सकीं।', 'File tersebut tidak dapat dibaca.'),
+}
+
+FMT = {
+    'Photo Sample {0}': ('Foto de muestra {0}', 'Beispielfoto {0}', 'Photo exemple {0}', 'Foto di esempio {0}', 'Foto de exemplo {0}', 'नमूना फ़ोटो {0}', 'Foto contoh {0}'),
+    'Use Sample {0}': ('Usar muestra {0}', 'Beispiel {0} verwenden', 'Utiliser l’exemple {0}', 'Usa l’esempio {0}', 'Usar exemplo {0}', 'नमूना {0} इस्तेमाल करें', 'Gunakan contoh {0}'),
+    'Use Sample {0} as the background': ('Usar la muestra {0} como fondo', 'Beispiel {0} als Hintergrund verwenden', 'Utiliser l’exemple {0} comme fond', 'Usa l’esempio {0} come sfondo', 'Usar o exemplo {0} como fundo', 'नमूना {0} को पृष्ठभूमि बनाएँ', 'Gunakan contoh {0} sebagai latar'),
+    'Background {0}': ('Fondo {0}', 'Hintergrund {0}', 'Fond {0}', 'Sfondo {0}', 'Fundo {0}', 'पृष्ठभूमि {0}', 'Latar {0}'),
+}

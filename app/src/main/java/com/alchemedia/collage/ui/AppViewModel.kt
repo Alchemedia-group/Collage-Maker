@@ -1,5 +1,6 @@
 package com.alchemedia.collage.ui
 
+import com.alchemedia.collage.Strings
 import android.app.Application
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ sealed interface Overlay {
 
 sealed interface Sheet {
     data object Pro : Sheet
+    data object Language : Sheet
     data object Export : Sheet
     data class Card(val projectId: String) : Sheet
     data class HistoryItem(val entryId: String) : Sheet
@@ -180,7 +182,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun togglePick(id: String) {
         if (selection.remove(id)) { suggestForSelection(); return }
-        if (selection.size >= MAX_PHOTOS) { showToast("A collage holds up to $MAX_PHOTOS photos."); return }
+        if (selection.size >= MAX_PHOTOS) { showToast(Strings.get(R.string.max_photos, MAX_PHOTOS)); return }
         selection.add(id)
         suggestForSelection()
     }
@@ -210,7 +212,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
         if (added > 0) {
             suggestForSelection()
-            showToast("Added $added photo${if (added == 1) "" else "s"}.")
+            showToast(Strings.plural(R.plurals.p_added_photos, added))
         }
     }
 
@@ -229,7 +231,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             }
             creating = false
             if (refs.isEmpty()) {
-                showToast("Couldn't read those photos. Please try again.")
+                showToast(Strings.get(R.string.added_photos_fail))
                 return@launch
             }
             val project = store.save(CollageProject.create(id, System.currentTimeMillis(), refs, layout, aspect))
@@ -255,13 +257,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun duplicateProject(id: String) {
         val p = store.projects.value.firstOrNull { it.id == id } ?: return
-        viewModelScope.launch { store.duplicate(p); showToast("Duplicated.") }
+        viewModelScope.launch { store.duplicate(p); showToast(Strings.get(R.string.duplicated)) }
     }
 
     fun deleteProject(id: String) {
         viewModelScope.launch {
             val (index, gone) = store.delete(id) ?: return@launch
-            showToast("Deleted “${gone.name.ifBlank { "Untitled collage" }}”. Copies in History stay.", "Undo") {
+            showToast(Strings.get(R.string.deleted_collage, gone.name.ifBlank { Strings.get(R.string.untitled) }), Strings.get(R.string.undo)) {
                 viewModelScope.launch { store.restore(index, gone) }
             }
         }
@@ -273,7 +275,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val (index, entry) = store.deleteHistory(entryId) ?: return@launch
             sheets.removeAll { it is Sheet.HistoryItem }
-            showToast("Removed from History.", "Undo") { viewModelScope.launch { store.restoreHistory(index, entry) } }
+            showToast(Strings.get(R.string.removed_history), Strings.get(R.string.undo)) { viewModelScope.launch { store.restoreHistory(index, entry) } }
         }
     }
 
@@ -281,7 +283,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val all = store.clearHistory()
             if (all.isEmpty()) return@launch
-            showToast("History cleared.", "Undo") { viewModelScope.launch { store.restoreAllHistory(all) } }
+            showToast(Strings.get(R.string.history_cleared), Strings.get(R.string.undo)) { viewModelScope.launch { store.restoreAllHistory(all) } }
         }
     }
 
@@ -290,7 +292,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val copy = store.duplicate(entry.project, nameSuffix = null)
             openEditor(copy)
-            showToast("Opened a copy. The saved version stays in History.")
+            showToast(Strings.get(R.string.opened_copy))
         }
     }
 

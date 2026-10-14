@@ -1,5 +1,6 @@
 package com.alchemedia.collage.model
 
+import com.alchemedia.collage.Strings
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -57,7 +58,7 @@ data class CanvasItem(
         fun newId(prefix: String) = prefix + UUID.randomUUID().toString().take(6)
 
         fun text(
-            text: String = "Your text", font: String = "bric", size: Float = .11f, y: Float = .5f, rot: Float = 0f,
+            text: String = Strings.named("default_text", "Your text"), font: String = "bric", size: Float = .11f, y: Float = .5f, rot: Float = 0f,
             fill: Long? = 0xFFFFFFFF, strokeColor: Long = 0xFF111827, strokeW: Float = .09f, shadow: ShadowSpec? = null,
             bg: Long? = null, spacing: Float = 0f,
         ) = CanvasItem(

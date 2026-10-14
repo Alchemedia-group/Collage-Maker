@@ -1,11 +1,14 @@
 package com.alchemedia.collage.render
 
+import com.alchemedia.collage.Strings
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import kotlin.math.cos
 import kotlin.math.sin
 
-data class FilterDef(val id: String, val name: String, val css: String)
+data class FilterDef(val id: String, val name: String, val css: String) {
+    val title: String get() = Strings.named("filter_$id", name)
+}
 
 /** Photo filters. Each is written as a CSS filter string and turned into one colour matrix. */
 object Filters {
