@@ -176,7 +176,7 @@ class BillingManager(context: Context, private val settings: SettingsStore) {
 
     companion object {
         /** The subscription's product id in Google Play Console. */
-        const val PRODUCT_ID = "photo_collage_pro_monthly"
+        const val PRODUCT_ID = "photo_collage_pro_monthly_v2"
         const val FALLBACK_PRICE = "£2.99"
 
         /** The purchases that count as Pro: ours, and paid for (a pending payment does not unlock anything yet). */

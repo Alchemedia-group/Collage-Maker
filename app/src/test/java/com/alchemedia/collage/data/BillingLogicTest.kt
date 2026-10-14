@@ -44,7 +44,7 @@ class BillingLogicTest {
     }
 
     @Test fun theProductIdMatchesPlayConsole() {
-        assertEquals("photo_collage_pro_monthly", BillingManager.PRODUCT_ID)
+        assertEquals("photo_collage_pro_monthly_v2", BillingManager.PRODUCT_ID)
     }
 
     @Test fun theDebugProSwitchIsRemembered() {

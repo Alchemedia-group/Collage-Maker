@@ -12,7 +12,7 @@ designer, History and the Pro sheet. The preview shows how it is meant to look a
 - 20 photo filters with strength, 16 textured backgrounds
 - history of saved collages, delete with undo
 - Pro: £2.99 a month, removes the watermark (the preview takes no payment; the app uses Google Play Billing with the
-  subscription id `photo_collage_pro_monthly`, which has to be created in Play Console)
+  subscription id `photo_collage_pro_monthly_v2`, which has to be created in Play Console)
 
 Hero photos on the home screen are from Unsplash (free to use under the Unsplash License). All other sample photos are
 generated in the browser.

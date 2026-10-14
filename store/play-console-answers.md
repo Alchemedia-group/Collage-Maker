@@ -46,7 +46,8 @@ Paste the public URL of `store/privacy-policy.md` once it is hosted (Play Consol
 - Contact details: support email and, if you have one, a website. The email is shown publicly on the store page.
 
 ## Subscription product
-- Product ID: `photo_collage_pro_monthly` (must match exactly).
+- Product ID: `photo_collage_pro_monthly_v2` (must match exactly). The first ID, `photo_collage_pro_monthly`, was used by mistake for a one-time product and Play will not let it be reused, so the app uses `_v2`.
+- It must be created under Monetize, Products, **Subscriptions**, not under In-app products.
 - Base plan: monthly, auto-renewing, GBP 2.99. Add other countries' prices from Play's suggested conversions.
 - Benefits text: "Removes the Photo Collage mark from saved collages."
 - Add free trial or introductory offers later without touching the app: the app uses the plain base plan.

@@ -18,8 +18,8 @@ android {
         applicationId = "com.alchemedia.collage"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "0.4.1"
+        versionCode = 10
+        versionName = "0.4.3"
     }
 
     // The upload key lives in keystore.properties and release-keys/, which are not in git. Without them the release build is simply unsigned.

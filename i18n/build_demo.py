@@ -46,7 +46,7 @@ about = '''    <!-- About -->
       <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
         <div class="grab"></div>
         <h3 id="aboutTitle">About</h3>
-        <p class="meta">Version 0.4.1</p>
+        <p class="meta">Version 0.4.2</p>
         <div class="aboutbody">
           <p class="aboutp ink">%(note)s</p>
           <h4>%(lic)s</h4>

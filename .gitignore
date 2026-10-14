@@ -14,3 +14,4 @@ captures/
 __pycache__/
 keystore.properties
 release-keys/
+.kotlin/
