@@ -278,8 +278,9 @@ class AppFlowTest {
         ed.onPinchStart(400f, 500f, 600f, 500f)
         ed.onPinch(300f, 500f, 700f, 500f)
         assertEquals(2f, ed.project.cells[0].zoom, .01f)
-        ed.onPinch(0f, 500f, 1000f, 500f)
+        ed.onPinch(-3000f, 500f, 4000f, 500f)
         assertEquals(MAX_ZOOM, ed.project.cells[0].zoom, 0f)
+        assertEquals(20f, MAX_ZOOM, 0f)
         ed.onPinch(490f, 500f, 510f, 500f)
         assertEquals(1f, ed.project.cells[0].zoom, 0f)
         ed.onPinchEnd(); ed.onUp()
@@ -483,5 +484,52 @@ class AppFlowTest {
         for (x in 380 until 590) for (y in 520 until 590) if (with.getPixel(x, y) != without.getPixel(x, y)) diffCorner++
         assertEquals(0, diffTopLeft)
         assertTrue("watermark missing: $diffCorner", diffCorner > 500)
+    }
+
+    // ------------------------------------------------------------------ background image
+
+    private fun pictureFile(color: Int): java.io.File {
+        val f = java.io.File(app.cacheDir, "bg-${System.nanoTime()}.jpg")
+        Bitmap.createBitmap(64, 32, Bitmap.Config.ARGB_8888).apply { eraseColor(color) }.compress(Bitmap.CompressFormat.JPEG, 100, f.outputStream())
+        return f
+    }
+
+    @Test fun aPictureCanBeTheBackground() {
+        val ed = openEditor()
+        val before = ed.project.photos.size
+        ed.setBackgroundFromDevice(android.net.Uri.fromFile(pictureFile(0xFFCC2222.toInt())))
+        await { ed.project.backgroundImage != null }
+        val bg = ed.project.backgroundImage!!
+        assertTrue(vm.store.photoFile(ed.project.id, bg).exists())
+        assertEquals("it must not count as one of the collage's photos", before, ed.project.photos.size)
+        assertEquals(bg, ed.project.photo(bg.id))
+        // switching layouts must not put the background into a cell
+        ed.pickLayout("g3x1")
+        assertTrue(ed.project.cells.none { it.photoId == bg.id })
+        ed.clearBackgroundImage()
+        assertNull(ed.project.backgroundImage)
+    }
+
+    @Test fun theBackgroundPictureFillsTheCanvasBehindTheCells() {
+        val ed = openEditor()
+        ed.setBackgroundFromDevice(android.net.Uri.fromFile(pictureFile(0xFFCC2222.toInt())))
+        await { ed.project.backgroundImage != null }
+        ed.setMargin(8f); ed.setGap(8f)
+        val bmp = runBlocking { Exporter.render(app.photos, ed.project, watermark = false, longSide = 400) }
+        val corner = bmp.getPixel(3, 3)
+        val red = (corner shr 16 and 0xFF)
+        val green = (corner shr 8 and 0xFF)
+        assertTrue("corner is ${Integer.toHexString(corner)}", red > 150 && green < 90)
+    }
+
+    @Test fun theBackgroundPictureSurvivesARestart() {
+        val ed = openEditor()
+        ed.setBackgroundFromDevice(android.net.Uri.fromFile(pictureFile(0xFF2222CC.toInt())))
+        await { ed.project.backgroundImage != null }
+        vm.goHome()
+        await { vm.store.projects.value.firstOrNull { it.id == ed.project.id }?.backgroundImage != null }
+        val again = com.alchemedia.collage.data.CollageStore(app)
+        runBlocking { again.load() }
+        assertNotNull(again.projects.value.first { it.id == ed.project.id }.backgroundImage)
     }
 }

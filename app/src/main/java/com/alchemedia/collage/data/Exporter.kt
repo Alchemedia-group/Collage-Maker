@@ -24,7 +24,10 @@ object Exporter {
 
     suspend fun render(photos: PhotoStore, project: CollageProject, watermark: Boolean, longSide: Int = LONG_SIDE): Bitmap = withContext(Dispatchers.Default) {
         val (w, h) = sizeFor(project, longSide)
-        CollageRenderer.render(project, w, h, photos.source(project, longSide, blocking = true), watermark)
+        // Photos zoomed in far need more source pixels than the picture itself has.
+        val zoom = project.cells.maxOfOrNull { it.zoom }?.coerceIn(1f, 4f) ?: 1f
+        val source = photos.source(project, (longSide * zoom).toInt().coerceAtMost(4096), blocking = true)
+        CollageRenderer.render(project, w, h, source, watermark)
     }
 
     /**

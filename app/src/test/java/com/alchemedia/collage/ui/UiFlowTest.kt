@@ -345,4 +345,28 @@ class UiFlowTest {
         h.vm.openHistory(); h.settle()
         rule.onAllNodes(hasText("Under")).assertCountEquals(0)
     }
+
+    @Test fun homeHasAVisibleDesignCard() {
+        h.start()
+        rule.onNodeWithText("Design your own layout").assertIsDisplayed()
+        tapText("Design your own layout")
+        assertTrue(h.vm.overlays.last() is Overlay.Designer)
+    }
+
+    @Test fun everyLayoutRowStartsWithADesignTile() {
+        val p = h.makeProject("g2x2", "Rows")
+        h.start()
+        h.vm.openProject(p.id); h.settle(1500)
+        tapDesc("Design a new layout")
+        assertTrue(h.vm.overlays.last() is Overlay.Designer)
+    }
+
+    @Test fun imageTabInStyle() {
+        val p = h.makeProject("g2x2", "Bg")
+        h.start()
+        h.vm.openProject(p.id); h.settle(1500)
+        tapDesc("Style")
+        h.vm.editor!!.styleSub = StyleSub.Image; h.settle()
+        rule.onNodeWithText("Choose image").assertIsDisplayed()
+    }
 }

@@ -49,6 +49,15 @@ object CollageRenderer {
 
     fun draw(canvas: Canvas, project: CollageProject, w: Float, h: Float, photos: PhotoSource, ui: UiOptions? = null, watermark: Boolean = false) {
         canvas.drawColor(project.background.toInt())
+        project.backgroundImage?.let { ref ->
+            photos.bitmap(ref.id)?.let { bmp ->
+                // Fill the canvas, cropping the picture's edges rather than stretching it.
+                val s = max(w / bmp.width, h / bmp.height)
+                val dw = bmp.width * s
+                val dh = bmp.height * s
+                canvas.drawBitmap(bmp, null, RectF((w - dw) / 2, (h - dh) / 2, (w + dw) / 2, (h + dh) / 2), Paint(Paint.FILTER_BITMAP_FLAG))
+            }
+        }
         Textures.draw(canvas, project.texture, project.textureAmount, w.toInt(), h.toInt())
         val rects = CollageGeometry.cellRects(project.layout.cells, w, h, project.gapPercent, project.marginPercent)
         val dpr = ui?.dpr ?: 1f

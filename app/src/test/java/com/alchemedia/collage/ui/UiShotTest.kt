@@ -140,4 +140,13 @@ class UiShotTest {
         dark.vm.openSheet(Sheet.Pro)
         dark.shot("44-dark-pro")
     }
+
+    @Test fun newBits() {
+        val p = h.makeProject("g2x2", "Bg")
+        h.start()
+        h.shot("50-home-design")
+        h.vm.openProject(p.id)
+        h.vm.editor!!.selectTab(EditorTab.Layout); h.shot("51-layout-row-design")
+        h.vm.editor!!.selectTab(EditorTab.Style); h.vm.editor!!.styleSub = StyleSub.Image; h.shot("52-style-image")
+    }
 }

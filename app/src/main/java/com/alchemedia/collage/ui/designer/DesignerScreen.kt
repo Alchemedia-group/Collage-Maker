@@ -205,7 +205,11 @@ private fun DesignerCanvas(state: DesignerState, modifier: Modifier) {
         val project = base.copy(cells = List(cells.size) { CellContent(photoId = Samples.all[(it * 5 + 2) % Samples.all.size].id) })
         drawIntoCanvas { canvas ->
             val nc = canvas.nativeCanvas
+            // The picture is cropped at the canvas edge; outlines and handles are drawn past it so you can see what overhangs.
+            nc.save()
+            nc.clipRect(0f, 0f, size.width, size.height)
             CollageRenderer.draw(nc, project, size.width, size.height, photos)
+            nc.restore()
             val rects = com.alchemedia.collage.model.CollageGeometry.cellRects(cells, size.width, size.height, 0f, 0f)
             val white = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f * d; color = 0xF2FFFFFF.toInt() }
             val dark = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 1.2f * d; color = 0xCC101828.toInt() }
@@ -285,7 +289,7 @@ private fun ShapeTab(vm: AppViewModel, state: DesignerState) {
                 SquareIconBtn(Icon.Stretch, "Stretch the shape to fill the cell", state::toggleStretch, pressed = cell.fill)
             }
             if (state.adjust == ShapeAdjust.Size) {
-                SliderOne((cell.scale * 100f), 30f..120f, { "${it.roundToInt()}%" }, state::setSize, step = 1f, label = "Shape size", onStart = state::beginEdit)
+                SliderOne((cell.scale * 100f), 30f..300f, { "${it.roundToInt()}%" }, state::setSize, step = 1f, label = "Shape size", onStart = state::beginEdit)
             } else {
                 SliderOne(cell.rotation, -180f..180f, { "${it.roundToInt()}°" }, state::setRotation, step = 1f, label = "Shape rotation", onStart = state::beginEdit)
             }

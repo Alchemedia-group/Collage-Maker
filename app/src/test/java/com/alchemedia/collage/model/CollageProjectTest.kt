@@ -79,4 +79,15 @@ class CollageProjectTest {
         assertTrue(r[1].x - r[0].right >= 39.9f)
         assertEquals(1000f, r[3].right, .01f)
     }
+
+    @Test fun negativeMarginLetsCellsBleedPastTheEdge() {
+        val cells = LayoutCatalog.byId("g2x2").cells
+        val r = CollageGeometry.cellRects(cells, 1000f, 1000f, 0f, -5f)
+        assertEquals(-50f, r[0].x, .01f)
+        assertEquals(1050f, r[3].right, .01f)
+    }
+
+    @Test fun newCollagesStartWithASlimMargin() {
+        assertTrue(CollageProject.create("a", 1, photos(2), LayoutCatalog.byId("g2x2")).marginPercent <= 1f)
+    }
 }

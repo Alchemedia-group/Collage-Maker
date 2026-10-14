@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -40,14 +41,16 @@ fun EditorCanvas(ed: EditorState, modifier: Modifier = Modifier) {
         w = w.coerceAtLeast(60.dp)
         h = h.coerceAtLeast(60.dp)
         val longSidePx = with(density) { maxOf(w, h).toPx() }
-        val bucket = (ceil(longSidePx / 256f) * 256f).toInt().coerceIn(512, 1792)
+        // Zoomed-in photos need more pixels than the canvas has, or they go soft.
+        val zoomed = ed.project.cells.maxOfOrNull { it.zoom }?.coerceAtMost(4f) ?: 1f
+        val bucket = (ceil(longSidePx * zoomed / 256f) * 256f).toInt().coerceIn(512, 3072)
         val photos = rememberPhotos(ed.project, bucket)
         SideEffect {
             ed.photoSource = photos
             ed.density = density.density
         }
         Canvas(
-            Modifier.size(w, h).shadow(10.dp, spotColor = androidx.compose.ui.graphics.Color(0x52101828))
+            Modifier.size(w, h).shadow(10.dp, spotColor = androidx.compose.ui.graphics.Color(0x52101828)).clipToBounds()
                 .semantics { contentDescription = "Collage canvas. Tap a cell, drag to reposition its photo, pinch to zoom." }
                 .onSizeChanged { ed.canvasW = it.width.toFloat(); ed.canvasH = it.height.toFloat() }
                 .pointerInput(ed) {

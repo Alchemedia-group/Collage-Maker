@@ -218,13 +218,13 @@ class CollageStore(context: Context) {
         }.getOrDefault(emptyList())
     }
 
-    /** Accepts only layouts whose numbers make sense; coordinates are clamped to the canvas. */
+    /** Accepts only layouts whose numbers make sense; cells may run past the canvas edge but not absurdly far. */
     private fun sanitize(layout: Layout): Layout? {
         if (layout.id.isBlank() || layout.cells.isEmpty() || layout.cells.size > 40) return null
         val cells = layout.cells.map { c ->
             if (!c.x.isFinite() || !c.y.isFinite() || !c.w.isFinite() || !c.h.isFinite() || c.w <= 0f || c.h <= 0f) return null
             val shape = c.shape?.takeIf { LayoutCatalog.shapes.containsKey(it) }
-            c.copy(x = c.x.coerceIn(0f, 1f), y = c.y.coerceIn(0f, 1f), w = c.w.coerceAtMost(1f), h = c.h.coerceAtMost(1f), shape = shape, text = c.text?.take(2)?.takeIf { it.isNotEmpty() })
+            c.copy(x = c.x.coerceIn(-1f, 2f), y = c.y.coerceIn(-1f, 2f), w = c.w.coerceAtMost(3f), h = c.h.coerceAtMost(3f), shape = shape, text = c.text?.take(2)?.takeIf { it.isNotEmpty() })
         }
         return layout.copy(name = layout.name.ifBlank { "My layout" }.take(40), cat = "mine", mine = true, cells = cells)
     }

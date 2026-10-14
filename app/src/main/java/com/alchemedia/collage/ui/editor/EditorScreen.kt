@@ -78,6 +78,7 @@ fun EditorScreen(vm: AppViewModel, ed: EditorState) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS)) { uris ->
         if (uris.isNotEmpty()) ed.addFromDevice(uris)
     }
+    val bgPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) ed.setBackgroundFromDevice(uri) }
     val onCustomColor: (Long, (Long) -> Unit) -> Unit = { initial, apply -> colorRequest = initial to apply }
 
     Box(Modifier.fillMaxSize().background(c.paper)) {
@@ -110,7 +111,7 @@ fun EditorScreen(vm: AppViewModel, ed: EditorState) {
                         when (ed.tab) {
                             EditorTab.Layout -> LayoutPanel(vm, ed)
                             EditorTab.Shape -> ShapePanel(ed)
-                            EditorTab.Style -> StylePanel(ed, onCustomColor)
+                            EditorTab.Style -> StylePanel(ed, vm, onCustomColor) { bgPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
                             EditorTab.Photo -> PhotoPanel(vm, ed) { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
                             EditorTab.Text -> TextPanel(ed, onCustomColor)
                             EditorTab.Sticker -> StickerPanel(ed, onCustomColor)
@@ -155,13 +156,17 @@ private fun Dock(ed: EditorState) {
     ) {
         EditorTab.entries.forEach { t ->
             val on = ed.panelOpen && ed.tab == t
+            val fg = if (on) c.onAccent else c.dockFg.copy(alpha = .72f)
             Column(
-                Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(18.dp)).background(if (on) c.accent else Color.Transparent)
-                    .alpha(if (on) 1f else .72f).pressable({ ed.selectTab(t) }, role = Role.Tab, label = t.label).semantics { selected = on },
+                Modifier.weight(1f).height(46.dp)
+                    // The selected tab is painted as a plain rounded rectangle behind the label. (Clipping, backgrounds and an
+                    // alpha layer stacked on one node left it invisible on some phones.)
+                    .drawBehind { if (on) drawRoundRect(c.accent, cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx())) }
+                    .pressable({ ed.selectTab(t) }, role = Role.Tab, label = t.label).semantics { selected = on },
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
             ) {
-                CIcon(t.icon(), size = 20.dp, tint = if (on) c.onAccent else c.dockFg)
-                CText(t.label, size = 10.5.sp, weight = 700, color = if (on) c.onAccent else c.dockFg, maxLines = 1)
+                CIcon(t.icon(), size = 20.dp, tint = fg)
+                CText(t.label, size = 10.5.sp, weight = 700, color = fg, maxLines = 1)
             }
         }
     }

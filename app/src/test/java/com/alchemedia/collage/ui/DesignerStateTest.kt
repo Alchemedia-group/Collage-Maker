@@ -90,14 +90,37 @@ class DesignerStateTest {
         assertTrue(d.cells.all { it.w >= .039f && it.h >= .039f })
     }
 
-    @Test fun movingKeepsACellInsideTheCanvas() {
+    @Test fun cellsCanRunOffTheCanvasButKeepASliver() {
         val d = designer(null)
         d.split(true)
         d.selected = 0
         d.onDown(250f, 500f)
         d.onMove(-9000f, -9000f)
         d.onUp()
-        assertTrue(d.cells.all { it.x >= 0f && it.y >= 0f && it.x + it.w <= 1.0001f && it.y + it.h <= 1.0001f })
+        val c = d.cells[0]
+        assertTrue("x=${c.x}", c.x < 0f)
+        assertTrue("some of it stays on the canvas", c.x + c.w > .05f && c.y + c.h > .05f)
+        d.onDown(20f, 20f) // the sliver that is still on the canvas
+        d.onMove(99999f, 99999f)
+        d.onUp()
+        assertTrue(d.cells[0].x < 1f && d.cells[0].x > .5f && d.cells[0].y < 1f)
+    }
+
+    @Test fun edgesCanBeDraggedPastTheCanvas() {
+        val d = designer("g1x1")
+        d.selected = 0
+        d.link = false
+        d.onDown(1000f, 500f)
+        d.onMove(1400f, 500f)
+        d.onUp()
+        assertEquals(1.4f, d.cells[0].x + d.cells[0].w, .01f)
+    }
+
+    @Test fun shapesCanBeScaledPastTheCell() {
+        val d = designer(null)
+        d.setShape("heart")
+        d.setSize(300f)
+        assertEquals(3f, d.selectedCell!!.scale, 1e-6f)
     }
 
     @Test fun snappingShowsGuidesAndLandsOnTheCentre() {

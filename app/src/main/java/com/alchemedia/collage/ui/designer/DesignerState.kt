@@ -27,6 +27,16 @@ val DesignerShapes = listOf(
 )
 
 private const val MIN_CELL = .04f
+
+/** Cells may run past the canvas edge (they are cropped there), but at least a sliver must stay on it. */
+private const val OFF_MIN = -1f
+private const val OFF_MAX = 2f
+private const val SLIVER = .08f
+
+private fun clampPos(pos: Float, size: Float): Float {
+    val keep = min(size, SLIVER)
+    return pos.coerceIn(keep - size, 1f - keep)
+}
 private val FULL = LayoutCell(0f, 0f, 1f, 1f)
 
 /**
@@ -120,7 +130,7 @@ class DesignerState(base: Layout?, val editId: String?) {
         val c = selectedCell ?: return "Tap a cell first."
         if (cells.size >= 40) return "A layout can have up to 40 cells."
         push()
-        cells = cells + c.copy(x = (c.x + .03f).coerceIn(0f, 1f - c.w), y = (c.y + .03f).coerceIn(0f, 1f - c.h))
+        cells = cells + c.copy(x = clampPos(c.x + .03f, c.w), y = clampPos(c.y + .03f, c.h))
         selected = cells.lastIndex
         return null
     }
@@ -191,7 +201,7 @@ class DesignerState(base: Layout?, val editId: String?) {
     fun nudge(dx: Float, dy: Float) {
         val c = selectedCell ?: return
         push()
-        replaceSelected { it.copy(x = (c.x + dx).coerceIn(0f, 1f - c.w), y = (c.y + dy).coerceIn(0f, 1f - c.h)) }
+        replaceSelected { it.copy(x = clampPos(c.x + dx, c.w), y = clampPos(c.y + dy, c.h)) }
     }
 
     // ------------------------------------------------------------ touch
@@ -280,8 +290,8 @@ class DesignerState(base: Layout?, val editId: String?) {
 
     private fun move(start: List<LayoutCell>, idx: Int, dx: Float, dy: Float, guides: MutableList<Guide>): List<LayoutCell> {
         val s = start[idx]
-        var x = (s.x + dx).coerceIn(0f, 1f - s.w)
-        var y = (s.y + dy).coerceIn(0f, 1f - s.h)
+        var x = clampPos(s.x + dx, s.w)
+        var y = clampPos(s.y + dy, s.h)
         if (snap) {
             fun fit(axis: Char, pos: Float, size: Float): Float {
                 var best: Triple<Float, Float, Float>? = null // distance, position, guide
@@ -293,8 +303,8 @@ class DesignerState(base: Layout?, val editId: String?) {
                 }
                 return best?.let { guides.add(Guide(axis, it.third)); it.second } ?: pos
             }
-            x = fit('x', x, s.w).coerceIn(0f, 1f - s.w)
-            y = fit('y', y, s.h).coerceIn(0f, 1f - s.h)
+            x = clampPos(fit('x', x, s.w), s.w)
+            y = clampPos(fit('y', y, s.h), s.h)
         }
         return start.toMutableList().also { it[idx] = s.copy(x = x, y = y) }
     }
@@ -334,8 +344,8 @@ class DesignerState(base: Layout?, val editId: String?) {
             val coord = if (axis == 'x') (if (nearEdge) s.x else s.x + s.w) else (if (nearEdge) s.y else s.y + s.h)
             val d = if (axis == 'x') dx else dy
             val group = if (link) edgeGroup(start, idx, axis, coord) else listOf(EdgeCell(idx, !nearEdge, nearEdge))
-            var lo = 0f
-            var hi = 1f
+            var lo = OFF_MIN
+            var hi = OFF_MAX
             group.forEach { o ->
                 val c = start[o.i]
                 if (o.lo) lo = max(lo, (if (axis == 'x') c.x else c.y) + MIN_CELL)

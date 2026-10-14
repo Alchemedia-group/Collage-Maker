@@ -104,6 +104,7 @@ fun HomeScreen(vm: AppViewModel) {
                 }
             }
             item { QuickRow(vm) }
+            item { DesignCard(onClick = { vm.openDesigner(BrowseTarget.Home) }) }
             item {
                 SectionHeader("Pinned") {
                     if (projects.isNotEmpty()) CText("${projects.size} collage${if (projects.size == 1) "" else "s"}", size = 12.sp, color = c.muted)
@@ -308,5 +309,23 @@ private fun ProjectCard(project: CollageProject, modifier: Modifier, onOpen: () 
                 .pressable(onMenu, label = "More options for $name"),
             contentAlignment = Alignment.Center,
         ) { CIcon(Icon.More, size = 18.dp) }
+    }
+}
+
+/** A visible way in to the layout designer. */
+@Composable
+private fun DesignCard(onClick: () -> Unit) {
+    val c = CTheme.colors
+    Row(
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(c.card).dashedBorder(c.line, 18)
+            .pressable(onClick, label = "Design your own layout").padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(c.tint), contentAlignment = Alignment.Center) { CIcon(Icon.Pencil, tint = c.onTint) }
+        Column(Modifier.weight(1f)) {
+            CText("Design your own layout", size = 16.sp, weight = 700, display = true)
+            CText("Draw cells, pick shapes, save to My layouts", size = 12.sp, color = c.muted)
+        }
+        CIcon(Icon.ChevronRight, size = 20.dp, tint = c.muted)
     }
 }

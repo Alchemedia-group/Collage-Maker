@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -39,11 +40,11 @@ val LocalApp = compositionLocalOf<CollageApp> { error("CollageApp not provided")
 fun rememberPhotos(project: CollageProject, maxSide: Int): PhotoSource {
     val app = LocalApp.current
     var version by remember { mutableIntStateOf(0) }
-    LaunchedEffect(project.id, project.photos, maxSide) {
+    LaunchedEffect(project.id, project.photos, project.backgroundImage, maxSide) {
         withContext(Dispatchers.IO) { app.photos.preload(project, maxSide) }
         version++
     }
-    return remember(version, project.id, project.photos, maxSide) { app.photos.source(project, maxSide) }
+    return remember(version, project.id, project.photos, project.backgroundImage, maxSide) { app.photos.source(project, maxSide) }
 }
 
 /** A collage drawn with the shared renderer. [ui] adds the editing overlays. */
@@ -56,7 +57,7 @@ fun CollagePreview(
     watermark: Boolean = false,
     fixedRatio: Boolean = true,
 ) {
-    val m = if (fixedRatio) modifier.aspectRatio(project.aspect.ratio) else modifier
+    val m = (if (fixedRatio) modifier.aspectRatio(project.aspect.ratio) else modifier).clipToBounds()
     Canvas(m) {
         drawIntoCanvas { c -> CollageRenderer.draw(c.nativeCanvas, project, size.width, size.height, photos, ui, watermark) }
     }
@@ -80,6 +81,7 @@ fun LayoutIcon(layout: Layout, color: Color, modifier: Modifier = Modifier) {
             nc.save()
             nc.translate((size.width - box) / 2, (size.height - box) / 2)
             nc.scale(u, u)
+            nc.clipRect(ox, oy, ox + pw, oy + ph)
             val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = argb }
             layout.cells.forEach { d ->
                 val x = ox + d.x * pw

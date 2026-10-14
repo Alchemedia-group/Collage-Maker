@@ -102,7 +102,7 @@ fun ShapePanel(ed: EditorState) {
 }
 
 @Composable
-fun StylePanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
+fun StylePanel(ed: EditorState, vm: AppViewModel, onCustomColor: (Long, (Long) -> Unit) -> Unit, onPickBackground: () -> Unit) {
     val p = ed.project
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScrollRow(padding = 14.dp, spacing = 6.dp) {
@@ -114,6 +114,26 @@ fun StylePanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     CText("Background", size = 13.sp, color = CTheme.colors.muted)
                     CText(hexOf(p.background), size = 13.sp, weight = 700, letterSpacing = .5.sp)
+                }
+            }
+            StyleSub.Image -> {
+                val bg = p.backgroundImage
+                Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val c = CTheme.colors
+                    Box(
+                        Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)).background(if (bg == null) c.tint else Color.Transparent).pressable(onPickBackground, label = "Choose a background image"),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (bg == null) CIcon(Icon.Photo, size = 26.dp, tint = c.onTint)
+                        else AsyncImage(if (bg.fileName.startsWith("res:")) sampleDrawable(bg) else vm.store.photoFile(p.id, bg), null, Modifier.size(64.dp), contentScale = ContentScale.Crop)
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CText(if (bg == null) "Use one of your pictures behind the photos." else "The picture fills the whole background.", size = 13.sp, color = CTheme.colors.muted, lineHeight = 18.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            CButton(if (bg == null) "Choose image" else "Replace", onPickBackground, small = true, icon = Icon.Photo)
+                            if (bg != null) CButton("Remove", ed::clearBackgroundImage, small = true, style = BtnStyle.GhostDanger, icon = Icon.Trash)
+                        }
+                    }
                 }
             }
             StyleSub.Texture -> {
@@ -129,7 +149,7 @@ fun StylePanel(ed: EditorState, onCustomColor: (Long, (Long) -> Unit) -> Unit) {
             }
             StyleSub.Spacing -> {
                 SliderRow("Gap", p.gapPercent, 0f..12f, { "${it}%" }, ed::setGap, step = .25f)
-                SliderRow("Margin", p.marginPercent, 0f..12f, { "${it}%" }, ed::setMargin, step = .25f)
+                SliderRow("Margin", p.marginPercent, -10f..12f, { "${it}%" }, ed::setMargin, step = .25f)
                 SliderRow("Corners", p.cornerPercent, 0f..100f, ::percentText, ed::setCorner, step = 1f)
             }
             StyleSub.Filter -> {
@@ -198,7 +218,15 @@ fun PhotoPanel(vm: AppViewModel, ed: EditorState, onAddPhotos: () -> Unit) {
     val filled = cell.photoId != null
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(Modifier.alpha(if (filled) 1f else .4f)) {
-            SliderRow("Zoom", cell.zoom * 100f, 100f..MAX_ZOOM * 100f, { "${it.roundToInt()}%" }, { if (filled) ed.setZoom(it / 100f) }, step = 1f)
+            // Zoom goes up to 20x, so the slider is logarithmic: the same finger movement is the same proportional change.
+            val top = kotlin.math.ln(MAX_ZOOM)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                CText("Zoom", Modifier.width(62.dp), size = 14.sp, weight = 600)
+                com.alchemedia.collage.ui.components.BigSlider(
+                    kotlin.math.ln(cell.zoom) / top, { if (filled) ed.setZoom(kotlin.math.exp(it * top)) }, 0f..1f, Modifier.weight(1f), label = "Zoom",
+                )
+                CText("${(cell.zoom * 100f).roundToInt()}%", Modifier.width(52.dp), size = 13.sp, weight = 600, align = TextAlign.End)
+            }
         }
         Row(Modifier.padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CButton("Reset", ed::resetCell, small = true, style = BtnStyle.Tonal, enabled = filled, icon = Icon.Reset)

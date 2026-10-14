@@ -28,7 +28,7 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 enum class EditorTab(val label: String) { Layout("Layout"), Shape("Shape"), Style("Style"), Photo("Photo"), Text("Text"), Sticker("Stickers") }
-enum class StyleSub(val label: String) { Color("Color"), Texture("Texture"), Spacing("Spacing"), Filter("Filter") }
+enum class StyleSub(val label: String) { Color("Color"), Texture("Texture"), Spacing("Spacing"), Filter("Filter"), Image("Image") }
 enum class TextSub(val label: String) { Text("Text"), Font("Font"), Color("Color"), Style("Style"), Adjust("Size") }
 
 /** One number the user can slide for the selected item. */
@@ -65,7 +65,7 @@ enum class ItemSlider(val label: String, val min: Float, val max: Float, val ste
 
 enum class ColorTarget(val label: String) { Fill("Text"), Stroke("Outline"), Highlight("Highlight") }
 
-const val MAX_ZOOM = 5f
+const val MAX_ZOOM = 20f
 private const val MIN_ITEM = .02f
 private const val MAX_ITEM = .7f
 
@@ -174,6 +174,16 @@ class EditorState(private val vm: AppViewModel, initial: CollageProject) {
     }
 
     fun setAspect(a: AspectPreset) = update { it.copy(aspect = a) }
+    fun clearBackgroundImage() = update { it.copy(backgroundImage = null) }
+
+    /** Imports a picture from the device and uses it as the background. */
+    fun setBackgroundFromDevice(uri: android.net.Uri) {
+        vm.viewModelScope.launch {
+            val ref = vm.store.importPhotos(project.id, listOf(uri)).firstOrNull()
+            if (ref == null) vm.showToast("Couldn't read that picture.") else update { it.copy(backgroundImage = ref) }
+        }
+    }
+
     fun setBackground(argb: Long) = update { it.copy(background = argb) }
     fun setGap(v: Float) = update { it.copy(gapPercent = v) }
     fun setMargin(v: Float) = update { it.copy(marginPercent = v) }

@@ -38,6 +38,7 @@ class PhotoStore(context: Context, private val store: CollageStore) {
 
     fun preload(project: CollageProject, maxSide: Int) {
         project.photos.forEach { load(project.id, it, maxSide) }
+        project.backgroundImage?.let { load(project.id, it, maxSide) }
     }
 
     /** A source for the renderer. With [blocking] it decodes on demand (export); otherwise it only returns what is cached. */

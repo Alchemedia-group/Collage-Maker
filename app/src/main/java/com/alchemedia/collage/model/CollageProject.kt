@@ -48,13 +48,15 @@ data class CollageProject(
     val filterAmount: Float = 1f,
     val texture: String = "none",
     val textureAmount: Float = 1f,
+    /** A picture used as the background instead of (or under) the colour. Kept apart from [photos] so it never fills a cell. */
+    val backgroundImage: PhotoRef? = null,
     val photos: List<PhotoRef> = emptyList(),
     val cells: List<CellContent> = emptyList(),
     val items: List<CanvasItem> = emptyList(),
 ) {
     val layout: Layout get() = LayoutCatalog.byId(layoutId)
 
-    fun photo(id: String?): PhotoRef? = id?.let { wanted -> photos.firstOrNull { it.id == wanted } }
+    fun photo(id: String?): PhotoRef? = id?.let { wanted -> photos.firstOrNull { it.id == wanted } ?: backgroundImage?.takeIf { it.id == wanted } }
 
     /**
      * Switches layout. Photos keep their cell index where possible; photos that lost their cell
@@ -85,7 +87,7 @@ data class CollageProject(
         fun create(id: String, now: Long, photos: List<PhotoRef>, layout: Layout, aspect: AspectPreset = AspectPreset.Square): CollageProject =
             CollageProject(
                 id = id, createdAt = now, updatedAt = now, photos = photos, aspect = aspect,
-                gapPercent = 2.5f, marginPercent = 2.5f, cornerPercent = 12f,
+                gapPercent = 2.5f, marginPercent = 1f, cornerPercent = 12f,
             ).withLayout(layout)
     }
 }

@@ -101,7 +101,7 @@ fun LayoutPicker(
     }
     LaunchedEffect(category, selectedId, layouts) {
         val i = layouts.indexOfFirst { it.id == selectedId }
-        val offset = if (category == "mine") 1 else 0
+        val offset = 1
         if (i >= 0) runCatching { tiles.centerOn(i + offset) } else runCatching { tiles.scrollToItem(0) }
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -118,7 +118,8 @@ fun LayoutPicker(
             }
         }
         LazyRow(Modifier.fillMaxWidth().edgeFade(tiles), state = tiles, contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (category == "mine") item(key = "design") { DesignTile(onDesign) }
+            // "Design" leads every row, so drawing your own layout is never more than a swipe away.
+            item(key = "design") { DesignTile(onDesign) }
             if (layouts.isEmpty() && category != "mine") item(key = "none") { CText("Nothing here yet.", Modifier.padding(vertical = 14.dp), size = 13.sp, color = c.muted) }
             items(layouts, key = { it.id }) { l -> LayoutTile(l, l.id == selectedId, { onPick(l.id) }) }
         }

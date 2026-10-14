@@ -242,14 +242,14 @@ class CollageStoreTest {
         assertTrue(store.myLayouts.value.isEmpty())
     }
 
-    @Test fun layoutCellsAreClampedAndUnknownShapesDropped() {
+    @Test fun layoutCellsAreLimitedAndUnknownShapesDropped() {
         runBlocking { store.saveLayout(Layout("e", "  ", "x", cells = listOf(LayoutCell(-3f, 9f, 5f, 5f, shape = "nope", text = "ABCDE")), mine = false)) }
         val l = store.myLayouts.value.single()
         assertEquals("My layout", l.name)
         assertEquals("mine", l.cat)
         assertTrue(l.mine)
         val c = l.cells.single()
-        assertEquals(0f, c.x, 0f); assertEquals(1f, c.y, 0f); assertEquals(1f, c.w, 0f)
+        assertEquals(-1f, c.x, 0f); assertEquals(2f, c.y, 0f); assertEquals(3f, c.w, 0f)
         assertNull(c.shape)
         assertEquals("AB", c.text)
     }
