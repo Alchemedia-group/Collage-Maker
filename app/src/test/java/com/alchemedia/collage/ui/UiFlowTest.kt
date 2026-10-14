@@ -346,7 +346,7 @@ class UiFlowTest {
         rule.onAllNodes(hasText("Under")).assertCountEquals(0)
     }
 
-    @Test fun homeHasAVisibleDesignCard() {
+    @Test fun homeHeroHasTheDesignButton() {
         h.start()
         rule.onNodeWithText("Design your own layout").assertIsDisplayed()
         tapText("Design your own layout")

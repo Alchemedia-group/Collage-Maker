@@ -8,8 +8,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -34,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
@@ -97,14 +101,13 @@ fun HomeScreen(vm: AppViewModel) {
             if (!pro) Pill("Go Pro", { vm.openSheet(Sheet.Pro) }, ink = true)
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)) {
-            item { Hero(onNew = { vm.startNew() }) }
+            item { Hero(onNew = { vm.startNew() }, onDesign = { vm.openDesigner(BrowseTarget.Home) }) }
             item {
                 SectionHeader("Quick layouts") {
                     LinkBtn("See all ($total)", { vm.openBrowse(BrowseTarget.Home) }, vertical = 0.dp)
                 }
             }
             item { QuickRow(vm) }
-            item { DesignCard(onClick = { vm.openDesigner(BrowseTarget.Home) }) }
             item {
                 SectionHeader("Pinned") {
                     if (projects.isNotEmpty()) CText("${projects.size} collage${if (projects.size == 1) "" else "s"}", size = 12.sp, color = c.muted)
@@ -139,26 +142,25 @@ private fun SectionHeader(title: String, trailing: @Composable () -> Unit) {
     }
 }
 
+/** The app icon (the pinwheel), drawn from the same two layers as the launcher icon. */
 @Composable
 fun Logo(modifier: Modifier = Modifier) {
-    val c = CTheme.colors
-    Canvas(modifier) {
-        val s = size.width / 32f
-        drawRoundRect(c.accent, size = size, cornerRadius = CornerRadius(9f * s))
-        fun block(x: Float, y: Float, w: Float, h: Float, a: Float) =
-            drawRoundRect(c.onAccent.copy(alpha = a), Offset(x * s, y * s), androidx.compose.ui.geometry.Size(w * s, h * s), CornerRadius(2.5f * s))
-        block(6f, 6f, 9f, 13f, 1f); block(17f, 6f, 9f, 7f, .62f); block(17f, 15f, 9f, 11f, 1f); block(6f, 21f, 9f, 5f, .62f)
+    BoxWithConstraints(modifier.clip(RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+        // The icon's artwork sits inside the middle of a 108 unit square, so the layers are drawn larger than the box and cropped.
+        val layer = maxWidth * 1.55f
+        androidx.compose.foundation.Image(painterResource(R.drawable.ic_launcher_background), null, Modifier.requiredSize(layer))
+        androidx.compose.foundation.Image(painterResource(R.drawable.ic_launcher_foreground), null, Modifier.requiredSize(layer))
     }
 }
 
 // --------------------------------------------------------------------------- hero
 
 @Composable
-private fun Hero(onNew: () -> Unit) {
+private fun Hero(onNew: () -> Unit, onDesign: () -> Unit) {
     val c = CTheme.colors
     val shape = RoundedCornerShape(28.dp)
     Box(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().height(229.dp)
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().height(282.dp)
             .shadow(16.dp, shape, ambientColor = Color(0x4D101828), spotColor = Color(0x4D101828))
             .clip(shape)
             .drawBehind {
@@ -174,7 +176,10 @@ private fun Hero(onNew: () -> Unit) {
                 CText("Start a collage", Modifier.width(124.dp), size = 29.sp, weight = 800, display = true, color = Color.White, letterSpacing = (-1).sp, lineHeight = 28.4.sp)
                 CText("Pick your photos and get a layout suggested.", Modifier.width(118.dp).padding(top = 5.dp).alpha(.85f), size = 13.sp, color = Color.White, lineHeight = 18.2.sp)
             }
-            GoButton(onNew)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                GoButton(onNew)
+                DesignButton(onDesign)
+            }
         }
     }
 }
@@ -199,6 +204,20 @@ private fun GoButton(onClick: () -> Unit) {
     }
 }
 
+/** The way in to the layout designer, right under the main button. */
+@Composable
+private fun DesignButton(onClick: () -> Unit) {
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        Modifier.height(40.dp).clip(shape).background(Color(0x29FFFFFF)).border(1.dp, Color(0x59FFFFFF), shape)
+            .pressable(onClick, label = "Design your own layout").padding(start = 11.dp, end = 14.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        CIcon(Icon.Pencil, size = 18.dp, tint = Color.White, strokeWidth = 2.2f)
+        CText("Design your own layout", size = 12.5.sp, weight = 700, color = Color.White, maxLines = 1)
+    }
+}
+
 @Composable
 private fun HeroArt(modifier: Modifier) {
     val t = rememberInfiniteTransition(label = "float")
@@ -218,7 +237,7 @@ private fun HeroArt(modifier: Modifier) {
         Print(Modifier.align(Alignment.TopEnd).offset(x = (-2).dp, y = 12.dp).size(80.dp, 98.dp), 9f, b3) {
             AsyncImage(R.drawable.photo_boat, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
-        Print(Modifier.align(Alignment.BottomStart).offset(x = 30.dp, y = 10.dp).size(108.dp), -3f, b2) {
+        Print(Modifier.align(Alignment.BottomStart).offset(x = 46.dp, y = 10.dp).size(108.dp), -3f, b2) {
             CollagePreview(heroProject, photos, Modifier.fillMaxSize(), fixedRatio = false)
         }
         Sparkle(Modifier.offset(x = 20.dp, y = 8.dp).size(15.dp), 0)
@@ -309,23 +328,5 @@ private fun ProjectCard(project: CollageProject, modifier: Modifier, onOpen: () 
                 .pressable(onMenu, label = "More options for $name"),
             contentAlignment = Alignment.Center,
         ) { CIcon(Icon.More, size = 18.dp) }
-    }
-}
-
-/** A visible way in to the layout designer. */
-@Composable
-private fun DesignCard(onClick: () -> Unit) {
-    val c = CTheme.colors
-    Row(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(c.card).dashedBorder(c.line, 18)
-            .pressable(onClick, label = "Design your own layout").padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(c.tint), contentAlignment = Alignment.Center) { CIcon(Icon.Pencil, tint = c.onTint) }
-        Column(Modifier.weight(1f)) {
-            CText("Design your own layout", size = 16.sp, weight = 700, display = true)
-            CText("Draw cells, pick shapes, save to My layouts", size = 12.sp, color = c.muted)
-        }
-        CIcon(Icon.ChevronRight, size = 20.dp, tint = c.muted)
     }
 }
