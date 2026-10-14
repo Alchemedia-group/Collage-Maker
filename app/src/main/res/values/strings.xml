@@ -201,6 +201,16 @@
     <string name="billing_not_started">The purchase didn\'t start. Please try again.</string>
     <string name="billing_pending">Your payment is pending. Pro switches on as soon as it goes through.</string>
     <string name="billing_restore_none">No active Pro subscription was found for this Google account.</string>
+    <string name="about">About</string>
+    <string name="about_link">About and licences</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_support">Contact support</string>
+    <string name="about_privacy_note">Your photos stay on your phone. The app has no account and sends nothing anywhere.</string>
+    <string name="licences_title">Open-source licences</string>
+    <string name="licences_fonts">Fonts: all the fonts in the text tool come from Google Fonts and are used under the SIL Open Font License 1.1 or the Apache License 2.0. Each font belongs to its designer.</string>
+    <string name="licences_libs">Code: built with Kotlin, Jetpack Compose and AndroidX (Apache License 2.0), and the Google Play Billing Library.</string>
+    <string name="licences_photos">Sample photos: from Unsplash, used under the Unsplash License.</string>
     <string name="added_photos_fail">Couldn\'t read those photos. Please try again.</string>
     <string name="duplicated">Duplicated.</string>
     <string name="copy_suffix">" copy"</string>

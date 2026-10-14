@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -20,12 +22,34 @@ android {
         versionName = "0.4.1"
     }
 
+    // The upload key lives in keystore.properties and release-keys/, which are not in git. Without them the release build is simply unsigned.
+    val keystoreProps = Properties().apply {
+        rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    }
+    signingConfigs {
+        if (!keystoreProps.isEmpty) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (!keystoreProps.isEmpty) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+
+    // Only the languages the app is translated into, so libraries' strings in other languages are left out
+    // and Play lists exactly these eight.
+    androidResources {
+        localeFilters += listOf("en", "es", "de", "fr", "it", "pt", "hi", "in")
     }
 
     compileOptions {
@@ -42,6 +66,8 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
+            // the screenshot tests keep a lot of bitmaps alive; the default 512 MB makes the last tests of a long run flaky
+            all { it.maxHeapSize = "2g" }
         }
     }
 }

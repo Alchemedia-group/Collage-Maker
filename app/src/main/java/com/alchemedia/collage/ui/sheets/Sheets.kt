@@ -53,6 +53,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alchemedia.collage.BuildConfig
+import com.alchemedia.collage.AppInfo
 import com.alchemedia.collage.R
 import com.alchemedia.collage.data.BillingManager
 import com.alchemedia.collage.data.Exporter
@@ -190,6 +191,32 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** Version, privacy policy, support and the licences for the fonts, code and photos the app uses. */
+@Composable
+fun AboutSheet(vm: AppViewModel) {
+    val c = CTheme.colors
+    val context = LocalContext.current
+    fun open(intent: Intent) { runCatching { context.startActivity(intent) } }
+    SheetHost(onDismiss = vm::closeSheet) {
+        SheetTitle(Strings.get(R.string.about))
+        MetaText(Strings.get(R.string.about_version, BuildConfig.VERSION_NAME))
+        Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            CText(Strings.get(R.string.about_privacy_note), size = 14.sp, weight = 500, color = c.ink)
+            CText(Strings.get(R.string.licences_title), Modifier.padding(top = 6.dp), size = 15.sp, weight = 800, display = true)
+            CText(Strings.get(R.string.licences_fonts), size = 13.sp, weight = 500, color = c.muted)
+            CText(Strings.get(R.string.licences_libs), size = 13.sp, weight = 500, color = c.muted)
+            CText(Strings.get(R.string.licences_photos), size = 13.sp, weight = 500, color = c.muted)
+        }
+        if (AppInfo.PRIVACY_URL.isNotBlank()) {
+            CButton(Strings.get(R.string.about_privacy), { open(Intent(Intent.ACTION_VIEW, Uri.parse(AppInfo.PRIVACY_URL))) }, style = BtnStyle.Ghost)
+        }
+        if (AppInfo.SUPPORT_EMAIL.isNotBlank()) {
+            CButton(Strings.get(R.string.about_support), { open(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + AppInfo.SUPPORT_EMAIL))) }, style = BtnStyle.Ghost)
+        }
+        CButton(Strings.get(R.string.done), vm::closeSheet)
+    }
+}
+
 // ----------------------------------------------------------------------------------------------- export
 
 @Composable
@@ -255,7 +282,9 @@ fun ExportSheet(vm: AppViewModel, ed: EditorState) {
                 CText(Strings.get(R.string.free_mark), size = 12.sp, color = c.muted, lineHeight = 16.sp)
             }
             PlanCard(Modifier.weight(1f), selected = usePro, onClick = { if (pro) usePro = true else vm.openSheet(com.alchemedia.collage.ui.Sheet.Pro) }, badge = { ProTag(Modifier.align(Alignment.TopEnd).offset(x = (-10).dp, y = (-10).dp)) }) {
-                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                // with a large system font the price drops under the name instead of being cut off
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.Bottom) {
                     CText(Strings.get(R.string.pro), size = 17.sp, weight = 800, display = true)
                     CText(Strings.get(R.string.price_per_month, price), Modifier.padding(bottom = 1.dp), size = 12.sp, weight = 600, color = c.muted, maxLines = 1)
                 }

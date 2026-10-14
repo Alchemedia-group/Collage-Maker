@@ -36,8 +36,36 @@ sheet = '''    <!-- Language -->
 '''
 html = re.sub(r'    <!-- Language -->\n    <div class="scrim" id="langScrim".*?</div>\n    </div>\n\n', '', html, flags=re.S)
 m2 = '    <!-- Collage menu -->'
+EN = __import__('en').EN
 assert html.count(m2) == 1, 'collage menu marker not found'
 html = html.replace(m2, sheet + m2)
+
+# the About sheet (version, privacy note, licences) opened from a link at the end of Home
+about = '''    <!-- About -->
+    <div class="scrim" id="aboutScrim" hidden style="z-index:12">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+        <div class="grab"></div>
+        <h3 id="aboutTitle">About</h3>
+        <p class="meta">Version 0.4.1</p>
+        <div class="aboutbody">
+          <p class="aboutp ink">%(note)s</p>
+          <h4>%(lic)s</h4>
+          <p class="aboutp">%(fonts)s</p>
+          <p class="aboutp">%(libs)s</p>
+          <p class="aboutp">%(photos)s</p>
+        </div>
+        <button type="button" class="btn" id="aboutClose">Done</button>
+      </div>
+    </div>
+
+''' % dict(note=EN['about_privacy_note'], lic=EN['licences_title'], fonts=EN['licences_fonts'], libs=EN['licences_libs'], photos=EN['licences_photos'])
+html = re.sub(r'    <!-- About -->\n    <div class="scrim" id="aboutScrim".*?</div>\n    </div>\n\n', '', html, flags=re.S)
+html = html.replace(m2, about + m2)
+foot = '<div class="aboutfoot"><button type="button" class="linkbtn" id="homeAbout">About and licences</button></div>\n        '
+html = re.sub(r'<div class="aboutfoot">.*?</div>\n        ', '', html, flags=re.S)
+anchor_b = '<div class="board" id="homeGrid"></div>\n'
+assert html.count(anchor_b) == 1, 'home grid not found'
+html = html.replace(anchor_b, anchor_b + '        ' + foot.rstrip(' ') , 1)
 html = re.sub(r'    <div data-no-i18n>\n      <h2>Language</h2>.*?</div>\n', '', html, flags=re.S)
 css = '''  .langlist { display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; }
   .langrow { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: 13px 16px; font-size: 16px; font-weight: 600; }
@@ -46,5 +74,13 @@ css = '''  .langlist { display: flex; flex-direction: column; gap: 6px; max-heig
 '''
 if '.langlist' not in html:
     html = html.replace('  /* export sheet */', css + '\n  /* export sheet */', 1)
+about_css = '''  .aboutfoot { text-align: center; padding: 6px 0 70px; }
+  .aboutbody { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .aboutbody h4 { font-family: var(--display); font-size: 15px; font-weight: 800; margin-top: 6px; }
+  .aboutp { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .aboutp.ink { font-size: 14px; color: var(--ink); }
+'''
+if '.aboutfoot' not in html:
+    html = html.replace('  /* export sheet */', about_css + '\n  /* export sheet */', 1)
 open(path, 'w', encoding='utf-8').write(html)
 print('updated', os.path.normpath(path), len(html) // 1024, 'KB')

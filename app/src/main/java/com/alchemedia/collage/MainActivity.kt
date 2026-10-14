@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.alchemedia.collage.ui.SplashOverlay
+import com.alchemedia.collage.ui.WideScreenFrame
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     // only on a cold start: a recreate (language change, rotation) keeps the saved 'false'
                     var splash by rememberSaveable { mutableStateOf(true) }
                     Box {
-                        AppRoot(viewModel)
+                        WideScreenFrame { AppRoot(viewModel) }
                         if (splash) SplashOverlay(onDone = { splash = false })
                     }
                 }

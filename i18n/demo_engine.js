@@ -123,6 +123,12 @@
       scrim.addEventListener('pointerdown', (e) => { if (e.target === scrim) scrim.hidden = true; });
       const close = $('langClose'); if (close) close.addEventListener('click', () => { scrim.hidden = true; });
     }
+    const aboutOpen = $('homeAbout'), aboutScrim = $('aboutScrim');
+    if (aboutOpen && aboutScrim) {
+      aboutOpen.addEventListener('click', () => { aboutScrim.hidden = false; });
+      aboutScrim.addEventListener('pointerdown', (e) => { if (e.target === aboutScrim) aboutScrim.hidden = true; });
+      const done = $('aboutClose'); if (done) done.addEventListener('click', () => { aboutScrim.hidden = true; });
+    }
     setLang(NAMES[stored] ? stored : phoneLang(), undefined);
   }
   window.__i18n = { setLang: (l) => setLang(l, l), get lang() { return lang; }, missing: () => [...missing], clearMissing: () => missing.clear() };

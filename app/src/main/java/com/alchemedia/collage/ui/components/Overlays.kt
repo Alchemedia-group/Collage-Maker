@@ -1,5 +1,11 @@
 package com.alchemedia.collage.ui.components
 
+import com.alchemedia.collage.Strings
+import com.alchemedia.collage.R
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -47,7 +53,9 @@ fun SheetHost(onDismiss: () -> Unit, modifier: Modifier = Modifier, content: @Co
         AnimatedVisibility(visible, enter = fadeIn(tween(160)), exit = fadeOut(tween(120))) {
             Box(
                 Modifier.fillMaxSize().background(Color(0x8C0A0E16))
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss)
+                    // the dimmed area closes the sheet, so a screen reader needs to be able to find it
+                    .semantics { contentDescription = Strings.get(R.string.close); role = Role.Button },
             )
         }
         BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {

@@ -11,7 +11,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -30,6 +34,7 @@ import com.alchemedia.collage.ui.home.NewScreen
 import com.alchemedia.collage.ui.sheets.CardSheet
 import com.alchemedia.collage.ui.sheets.ExportSheet
 import com.alchemedia.collage.ui.sheets.HistoryItemSheet
+import com.alchemedia.collage.ui.sheets.AboutSheet
 import com.alchemedia.collage.ui.sheets.LanguageSheet
 import com.alchemedia.collage.ui.sheets.ProSheet
 import com.alchemedia.collage.ui.theme.CTheme
@@ -88,6 +93,7 @@ fun AppRoot(vm: AppViewModel) {
                 when (sheet) {
                     Sheet.Pro -> ProSheet(vm)
                     Sheet.Language -> LanguageSheet(vm)
+                    Sheet.About -> AboutSheet(vm)
                     Sheet.Export -> vm.editor?.let { ExportSheet(vm, it) }
                     is Sheet.Card -> CardSheet(vm, sheet.projectId)
                     is Sheet.HistoryItem -> HistoryItemSheet(vm, sheet.entryId)
@@ -122,5 +128,19 @@ private fun OverlayFrame(covered: Boolean, content: @Composable () -> Unit) {
                 .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }
                 .then(if (covered) Modifier.clearAndSetSemantics { } else Modifier),
         ) { content() }
+    }
+}
+
+/** The widest the phone-style screens are drawn. On a tablet or a foldable they sit in the middle with the desk colour either side. */
+private val MAX_CONTENT_WIDTH = 560.dp
+
+/**
+ * Keeps the app's screens at phone proportions on wide windows. Android ignores a portrait lock on big screens, so
+ * the app has to look right when the window is wide, tall, or being resized.
+ */
+@Composable
+fun WideScreenFrame(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().background(CTheme.colors.desk)) {
+        Box(Modifier.align(Alignment.Center).widthIn(max = MAX_CONTENT_WIDTH).fillMaxHeight()) { content() }
     }
 }

@@ -38,6 +38,8 @@ class UiHarness(private val rule: AndroidComposeTestRule<*, ComponentActivity>, 
 
     /** Lets background work (photo decoding, saving) finish and the animations play out. */
     fun settle(ms: Long = 900) {
+        // tests change state from outside Compose; make sure those writes reach the composition before the clock moves
+        androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
         repeat(6) {
             Thread.sleep(120)
             rule.mainClock.advanceTimeBy(ms / 6)

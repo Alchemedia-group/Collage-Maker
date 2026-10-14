@@ -1,5 +1,8 @@
 package com.alchemedia.collage.ui.home
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.platform.LocalDensity
 import com.alchemedia.collage.Strings
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -96,7 +99,7 @@ fun HomeScreen(vm: AppViewModel) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Logo(Modifier.size(28.dp))
                 // the bar also holds language, history and Go Pro, so the name has to fit beside them on a 360dp phone
-                CText("Photo Collage", size = 20.sp, weight = 800, display = true, letterSpacing = (-.75).sp, maxLines = 1)
+                CText("Photo Collage", size = (20f / LocalDensity.current.fontScale).sp, weight = 800, display = true, letterSpacing = (-.75).sp, maxLines = 1)
             }
             if (pro) ProTag(Modifier.padding(end = 4.dp))
             IconBtn(Icon.Globe, Strings.get(R.string.language), { vm.openSheet(Sheet.Language) }, size = 36.dp)
@@ -133,6 +136,11 @@ fun HomeScreen(vm: AppViewModel) {
                     }
                 }
             }
+            item {
+                Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+                    LinkBtn(Strings.get(R.string.about_link), { vm.openSheet(Sheet.About) }, color = c.muted, vertical = 12.dp)
+                }
+            }
         }
     }
 }
@@ -162,8 +170,12 @@ fun Logo(modifier: Modifier = Modifier) {
 private fun Hero(onNew: () -> Unit, onDesign: () -> Unit) {
     val c = CTheme.colors
     val shape = RoundedCornerShape(28.dp)
+    // with a larger system font the text needs more room, both wider (up to the picture) and taller
+    val fontScale = LocalDensity.current.fontScale
+    val grow = (fontScale - 1f).coerceAtLeast(0f)
+    val textWidth = { dp: Float -> (dp * fontScale.coerceAtLeast(1f)).coerceAtMost(170f).dp }
     Box(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().height(282.dp)
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp).fillMaxWidth().height((282f + 150f * grow).dp)
             .shadow(16.dp, shape, ambientColor = Color(0x4D101828), spotColor = Color(0x4D101828))
             .clip(shape)
             .drawBehind {
@@ -176,8 +188,8 @@ private fun Hero(onNew: () -> Unit, onDesign: () -> Unit) {
         HeroArt(Modifier.align(Alignment.CenterEnd).width(166.dp).fillMaxSize())
         Column(Modifier.fillMaxSize().padding(start = 20.dp, top = 18.dp, bottom = 22.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
-                CText(Strings.get(R.string.start_a_collage), Modifier.width(124.dp), size = 29.sp, weight = 800, display = true, color = Color.White, letterSpacing = (-1).sp, lineHeight = 28.4.sp)
-                CText(Strings.get(R.string.hero_sub), Modifier.width(118.dp).padding(top = 5.dp).alpha(.85f), size = 13.sp, color = Color.White, lineHeight = 18.2.sp)
+                CText(Strings.get(R.string.start_a_collage), Modifier.width(textWidth(124f)), size = 29.sp, weight = 800, display = true, color = Color.White, letterSpacing = (-1).sp, lineHeight = 28.4.sp)
+                CText(Strings.get(R.string.hero_sub), Modifier.width(textWidth(118f)).padding(top = 5.dp).alpha(.85f), size = 13.sp, color = Color.White, lineHeight = 18.2.sp)
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 GoButton(onNew)
@@ -212,12 +224,13 @@ private fun GoButton(onClick: () -> Unit) {
 private fun DesignButton(onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
     Row(
-        Modifier.height(40.dp).clip(shape).background(Color(0x29FFFFFF)).border(1.dp, Color(0x59FFFFFF), shape)
+        Modifier.widthIn(max = 176.dp).heightIn(min = 40.dp).clip(shape).background(Color(0x29FFFFFF)).border(1.dp, Color(0x59FFFFFF), shape)
             .pressable(onClick, label = Strings.get(R.string.design_own_layout)).padding(start = 11.dp, end = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CIcon(Icon.Pencil, size = 18.dp, tint = Color.White, strokeWidth = 2.2f)
-        CText(Strings.get(R.string.design_own_layout), size = 12.5.sp, weight = 700, color = Color.White, maxLines = 1)
+        // wraps onto a second line with a large system font, so it never runs under the picture
+        CText(Strings.get(R.string.design_own_layout), Modifier.weight(1f, fill = false).padding(vertical = 6.dp), size = 12.5.sp, weight = 700, color = Color.White, maxLines = 2)
     }
 }
 

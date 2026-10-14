@@ -200,6 +200,16 @@
     <string name="billing_not_started">Pembelian tidak dapat dimulai. Silakan coba lagi.</string>
     <string name="billing_pending">Pembayaran Anda sedang tertunda. Pro akan aktif begitu pembayaran selesai.</string>
     <string name="billing_restore_none">Tidak ditemukan langganan Pro yang aktif untuk akun Google ini.</string>
+    <string name="about">Tentang</string>
+    <string name="about_link">Tentang dan lisensi</string>
+    <string name="about_version">Versi %1$s</string>
+    <string name="about_privacy">Kebijakan privasi</string>
+    <string name="about_support">Hubungi dukungan</string>
+    <string name="about_privacy_note">Foto Anda tetap di ponsel Anda. Aplikasi ini tidak memiliki akun dan tidak mengirim apa pun ke mana pun.</string>
+    <string name="licences_title">Lisensi sumber terbuka</string>
+    <string name="licences_fonts">Font: semua font di alat teks berasal dari Google Fonts dan digunakan di bawah SIL Open Font License 1.1 atau Apache License 2.0. Setiap font adalah milik perancangnya.</string>
+    <string name="licences_libs">Kode: dibuat dengan Kotlin, Jetpack Compose, dan AndroidX (Apache License 2.0), serta Google Play Billing Library.</string>
+    <string name="licences_photos">Foto contoh: dari Unsplash, digunakan di bawah Lisensi Unsplash.</string>
     <string name="added_photos_fail">Foto itu tidak dapat dibaca. Silakan coba lagi.</string>
     <string name="duplicated">Digandakan.</string>
     <string name="copy_suffix">" (salinan)"</string>

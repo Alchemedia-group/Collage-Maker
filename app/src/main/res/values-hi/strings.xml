@@ -200,6 +200,16 @@
     <string name="billing_not_started">खरीदारी शुरू नहीं हो सकी। कृपया फिर कोशिश करें।</string>
     <string name="billing_pending">आपका भुगतान लंबित है। भुगतान पूरा होते ही Pro चालू हो जाएगा।</string>
     <string name="billing_restore_none">इस Google खाते के लिए कोई सक्रिय Pro सदस्यता नहीं मिली।</string>
+    <string name="about">जानकारी</string>
+    <string name="about_link">जानकारी और लाइसेंस</string>
+    <string name="about_version">संस्करण %1$s</string>
+    <string name="about_privacy">गोपनीयता नीति</string>
+    <string name="about_support">सहायता से संपर्क करें</string>
+    <string name="about_privacy_note">आपकी फ़ोटो आपके फ़ोन में ही रहती हैं। ऐप में कोई अकाउंट नहीं है और यह कुछ भी कहीं नहीं भेजता।</string>
+    <string name="licences_title">ओपन-सोर्स लाइसेंस</string>
+    <string name="licences_fonts">फ़ॉन्ट: टेक्स्ट टूल के सभी फ़ॉन्ट Google Fonts से हैं और SIL Open Font License 1.1 या Apache License 2.0 के तहत इस्तेमाल किए गए हैं। हर फ़ॉन्ट उसके डिज़ाइनर का है।</string>
+    <string name="licences_libs">कोड: Kotlin, Jetpack Compose और AndroidX (Apache License 2.0) तथा Google Play Billing Library से बना है।</string>
+    <string name="licences_photos">नमूना फ़ोटो: Unsplash से, Unsplash लाइसेंस के तहत इस्तेमाल की गई हैं।</string>
     <string name="added_photos_fail">वे फ़ोटो पढ़ी नहीं जा सकीं। कृपया फिर कोशिश करें।</string>
     <string name="duplicated">डुप्लिकेट बन गया।</string>
     <string name="copy_suffix">" (कॉपी)"</string>

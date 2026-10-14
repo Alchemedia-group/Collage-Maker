@@ -47,6 +47,7 @@ sealed interface Overlay {
 sealed interface Sheet {
     data object Pro : Sheet
     data object Language : Sheet
+    data object About : Sheet
     data object Export : Sheet
     data class Card(val projectId: String) : Sheet
     data class HistoryItem(val entryId: String) : Sheet

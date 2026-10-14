@@ -12,3 +12,5 @@ captures/
 *.keystore
 *.jks
 __pycache__/
+keystore.properties
+release-keys/
