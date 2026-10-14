@@ -46,7 +46,7 @@ about = '''    <!-- About -->
       <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
         <div class="grab"></div>
         <h3 id="aboutTitle">About</h3>
-        <p class="meta">Version 0.4.2</p>
+        <p class="meta">Version 0.4.3</p>
         <div class="aboutbody">
           <p class="aboutp ink">%(note)s</p>
           <h4>%(lic)s</h4>
@@ -61,11 +61,12 @@ about = '''    <!-- About -->
 ''' % dict(note=EN['about_privacy_note'], lic=EN['licences_title'], fonts=EN['licences_fonts'], libs=EN['licences_libs'], photos=EN['licences_photos'])
 html = re.sub(r'    <!-- About -->\n    <div class="scrim" id="aboutScrim".*?</div>\n    </div>\n\n', '', html, flags=re.S)
 html = html.replace(m2, about + m2)
-foot = '<div class="aboutfoot"><button type="button" class="linkbtn" id="homeAbout">About and licences</button></div>\n        '
-html = re.sub(r'<div class="aboutfoot">.*?</div>\n        ', '', html, flags=re.S)
+foot_html = '<div class="aboutfoot"><button type="button" class="linkbtn" id="homeAbout">About and licences</button></div>\n'
+# remove exactly the block written below on an earlier run, so this script can be run again safely
+html = html.replace('        ' + foot_html, '')
 anchor_b = '<div class="board" id="homeGrid"></div>\n'
 assert html.count(anchor_b) == 1, 'home grid not found'
-html = html.replace(anchor_b, anchor_b + '        ' + foot.rstrip(' ') , 1)
+html = html.replace(anchor_b, anchor_b + '        ' + foot_html, 1)
 html = re.sub(r'    <div data-no-i18n>\n      <h2>Language</h2>.*?</div>\n', '', html, flags=re.S)
 css = '''  .langlist { display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; }
   .langrow { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: 13px 16px; font-size: 16px; font-weight: 600; }
